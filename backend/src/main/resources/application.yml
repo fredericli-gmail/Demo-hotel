@@ -1,0 +1,24 @@
+# 繁體中文註解：全域環境設定，以 YAML 方式集中管理。
+server:
+  port: 8080 # 繁體中文註解：預設監聽埠，可依環境調整。
+
+spring:
+  application:
+    name: demo-hotel-backend # 繁體中文註解：系統顯示用名稱。
+  datasource:
+    url: jdbc:h2:mem:hotel;MODE=MYSQL;DB_CLOSE_DELAY=-1 # 繁體中文註解：採用 H2 記憶體資料庫，模擬 MySQL 語法。
+    username: sa # 繁體中文註解：H2 預設帳號。
+    password: "" # 繁體中文註解：H2 預設無密碼。
+    driver-class-name: org.h2.Driver # 繁體中文註解：指定 H2 JDBC Driver。
+  jpa:
+    hibernate:
+      ddl-auto: update # 繁體中文註解：開發階段自動更新資料表結構。
+    show-sql: false # 繁體中文註解：預設關閉 SQL 輸出，可視情況開啟。
+
+wallet:
+  issuer:
+    base-url: https://issuer-sandbox.wallet.gov.tw # 繁體中文註解：發行端模組沙盒網址，可依環境覆寫。
+    access-token: ${WALLET_ISSUER_ACCESS_TOKEN:請於部署前填入發行端AccessToken} # 繁體中文註解：發行端 Access Token，預設從環境變數讀取，若未提供請手動填入。
+  verifier:
+    base-url: https://verifier-sandbox.wallet.gov.tw # 繁體中文註解：驗證端模組沙盒網址。
+    access-token: ${WALLET_VERIFIER_ACCESS_TOKEN:請於部署前填入驗證端AccessToken} # 繁體中文註解：驗證端 Access Token，需向官方申請。
