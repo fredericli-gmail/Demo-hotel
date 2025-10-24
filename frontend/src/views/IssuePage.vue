@@ -2,9 +2,14 @@
   <!-- 繁體中文註解：發卡表單，協助櫃檯輸入房客資訊並送出發卡請求。 -->
   <div class="container">
     <section class="card">
-      <h2>發卡作業</h2>
-      <form @submit.prevent="handleSubmit">
-        <div class="form-row">
+      <header class="section-heading">
+        <div>
+          <h2 class="section-title">發卡作業</h2>
+          <p class="section-subtitle">輸入旅客資訊即可立即產出專屬 VC 房卡並提供掃描。</p>
+        </div>
+      </header>
+      <form class="form-grid" @submit.prevent="handleSubmit">
+        <div class="form-field form-field--full">
           <label for="vcUid">VC 模板代碼（credentialType）</label>
           <input
             id="vcUid"
@@ -12,51 +17,55 @@
             required
             placeholder="請輸入 credentialType，例如：00000000_hlrc1023"
           />
+          <p class="helper-text">預設為官方房卡模板，可依需求替換為其他 credentialType。</p>
         </div>
-        <div class="form-row">
+        <div class="form-field">
           <label for="roomNb">房間號碼</label>
           <input id="roomNb" v-model="form.roomNb" required />
         </div>
-        <div class="form-row">
+        <div class="form-field">
           <label for="roomType">房間型態</label>
           <input id="roomType" v-model="form.roomType" placeholder="選填，例如：雙人房" />
         </div>
-        <div class="form-row">
+        <div class="form-field">
           <label for="roomMemo">備註</label>
           <input id="roomMemo" v-model="form.roomMemo" placeholder="選填，例如：需加床" />
         </div>
-        <div class="form-row">
+        <div class="form-field">
           <label for="checkInDate">入住日期</label>
           <input id="checkInDate" type="date" v-model="form.checkInDate" @change="handleCheckInChange" required />
         </div>
-        <div class="form-row">
+        <div class="form-field">
           <label for="checkOutDate">退房日期</label>
           <input id="checkOutDate" type="date" v-model="form.checkOutDate" @change="handleCheckOutChange" required />
         </div>
-        <div class="form-row">
+        <div class="form-field form-field--full">
           <label for="dataTag">資料標籤</label>
-          <input id="dataTag" v-model="form.dataTag" placeholder="可自訂標籤方便追蹤" />
+          <input id="dataTag" v-model="form.dataTag" placeholder="可自訂批次或用途，選填" />
         </div>
-        <button class="button" type="submit" :disabled="loading">{{ loading ? '處理中...' : '送出發卡' }}</button>
+        <div class="form-actions">
+          <button class="button" type="submit" :disabled="loading">{{ loading ? '處理中...' : '送出發卡' }}</button>
+        </div>
       </form>
     </section>
 
-    <section v-if="result" class="card">
-      <h3>發卡結果</h3>
-      <p><strong>交易序號：</strong>{{ result.transactionId }}</p>
-      <p><strong>Deep Link：</strong>{{ result.deepLink }}</p>
-      <div v-if="result.qrCode" class="qr-wrapper">
-        <img :src="result.qrCode" alt="房卡 QR Code" />
-      </div>
-    </section>
+    <qr-modal
+      :visible="showResultModal"
+      title="房卡已成功產出"
+      description="請現場掃描 QR Code 或點選 Deep Link，完成 VC 領取。"
+      :result="result"
+      @close="handleModalClose"
+    />
   </div>
 </template>
 
 <script>
 import { issueCredential } from '../services/credentialService';
+import QrModal from '../components/qr-modal.vue';
 
 export default {
   name: 'IssuePage',
+  components: { QrModal },
   data() {
     return {
       form: {
@@ -69,7 +78,8 @@ export default {
         dataTag: ''
       },
       loading: false,
-      result: null
+      result: null,
+      showResultModal: false
     };
   },
   created() {
@@ -160,38 +170,54 @@ export default {
         }
         const response = await issueCredential(payload);
         this.result = response;
+        this.showResultModal = true;
       } catch (error) {
         window.alert(error.message);
       } finally {
         this.loading = false;
       }
+    },
+    handleModalClose() {
+      this.showResultModal = false;
     }
   }
 };
 </script>
 
 <style scoped>
-.form-row {
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 20px 26px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.form-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 12px;
 }
 
-.form-row input {
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
+.form-field--full {
+  grid-column: 1 / -1;
 }
 
-.qr-wrapper {
-  margin-top: 16px;
+.helper-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.form-actions {
+  grid-column: 1 / -1;
   display: flex;
-  justify-content: center;
-}
-
-.qr-wrapper img {
-  width: 200px;
-  height: 200px;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 </style>
