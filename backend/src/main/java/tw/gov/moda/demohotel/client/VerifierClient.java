@@ -88,6 +88,12 @@ public class VerifierClient {
         }
     }
 
+    public VerifierResultResponse queryVerificationResult(String transactionId) {
+        VerifierResultRequest request = new VerifierResultRequest();
+        request.setTransactionId(transactionId);
+        return queryVerificationResult(request);
+    }
+
     /**
      * 繁體中文註解：呼叫 DWVP-02-101，透過 vpUid 取得 deep link。
      *

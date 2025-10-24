@@ -21,7 +21,7 @@
 3. 前端預設走 `http://localhost:5173`，透過 Vite 代理呼叫後端 `http://localhost:8080/api`。
 
 ## 介面功能
-- 發卡作業 `/issue`：產生房卡 VC，支援入住／退房日期自動帶入。
+- 發卡作業 `/issue`：產生房卡 VC，支援入住／退房日期自動帶入，並可於同頁面驗證旅客駕照 VP。
 - 早餐券發放 `/tickets/breakfast`：使用 credentialType `00000000_hlbft1023` 發送早餐券，可填入房號、類別與餐廳位置。
 - 發卡查詢 `/inquiry`：依交易序號或標籤查詢 VC。
 - 卡片管理 `/lifecycle`：執行停止、啟用等狀態調整。

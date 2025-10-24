@@ -9,6 +9,7 @@
 - 使用 `backend/pom.xml` 管理依賴，維持 JDK 17 與 Spring Boot 3.2.x。
 - 預設資料庫改為 PostgreSQL，連線資訊可透過環境變數 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 覆寫。
 - 設定檔請更新 `backend/src/main/resources/application.yml` 中的發行端與驗證端 Access Token，或在容器環境設定對應環境變數。
+- 若需啟用駕照 VP 驗證，請設定 `wallet.driver-license-vp.ref` 與 `wallet.driver-license-vp.vp-uid`，並同步在部署環境放入 `VERIFIER_DRIVER_LICENSE_REF`、`VERIFIER_DRIVER_LICENSE_VPUID`。
 - 本地啟動：
   ```bash
   mvn spring-boot:run
@@ -23,6 +24,7 @@
   npm run dev
   ```
 - 發卡頁的 `VC 模板代碼` 請填入發行端介面顯示的 `credentialType`，例如 `00000000_hlrc1023`，否則 DWVC-101 會回傳錯誤。
+- 發卡頁頂端會自動產生駕照驗證 QR，成功掃描後會即時顯示姓名、身分證字號等欄位，若倒數結束需重新產生 QR。
 - 早餐券發放頁 `/tickets/breakfast` 預設使用 `00000000_hlbft1023`，若需換模板請先確認欄位名稱：`room_nb`、`ticket_type`、`location`。
 - 開發時透過 Vite 代理呼叫後端 API，正式環境可改為透過 Nginx 轉發。
 - UI 與文案皆需採繁體中文，若有共用字詞請整理於 `src/styles` 或常數檔案中。

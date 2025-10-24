@@ -25,3 +25,6 @@ wallet:
   verifier:
     base-url: https://verifier-sandbox.wallet.gov.tw # 繁體中文註解：驗證端模組沙盒網址。
     access-token: ${WALLET_VERIFIER_ACCESS_TOKEN:請於部署前填入驗證端AccessToken} # 繁體中文註解：驗證端 Access Token，需向官方申請。
+  driver-license-vp:
+    ref: ${VERIFIER_DRIVER_LICENSE_REF:00000000_demo_drivinglicense_202504251418} # 繁體中文註解：駕照 VP 驗證服務代碼。
+    vp-uid: ${VERIFIER_DRIVER_LICENSE_VPUID:demo_drivinglicense_202504251418} # 繁體中文註解：駕照 VP 模板代碼。

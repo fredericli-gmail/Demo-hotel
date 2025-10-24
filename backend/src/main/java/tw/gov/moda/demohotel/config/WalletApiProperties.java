@@ -21,6 +21,11 @@ public class WalletApiProperties {
     private final Endpoint verifier = new Endpoint();
 
     /**
+     * 繁體中文註解：駕照 VP 驗證相關設定。
+     */
+    private final DriverLicenseVp driverLicenseVp = new DriverLicenseVp();
+
+    /**
      * 繁體中文註解：外部呼叫時使用的設定資料結構。
      */
     public static class Endpoint {
@@ -88,5 +93,41 @@ public class WalletApiProperties {
      */
     public Endpoint getVerifier() {
         return verifier;
+    }
+
+    public DriverLicenseVp getDriverLicenseVp() {
+        return driverLicenseVp;
+    }
+
+    /**
+     * 繁體中文註解：駕照 VP 驗證所需參數。
+     */
+    public static class DriverLicenseVp {
+
+        /**
+         * 繁體中文註解：驗證服務代碼 ref。
+         */
+        private String ref;
+
+        /**
+         * 繁體中文註解：VP 模板代碼。
+         */
+        private String vpUid;
+
+        public String getRef() {
+            return ref;
+        }
+
+        public void setRef(String ref) {
+            this.ref = ref;
+        }
+
+        public String getVpUid() {
+            return vpUid;
+        }
+
+        public void setVpUid(String vpUid) {
+            this.vpUid = vpUid;
+        }
     }
 }
