@@ -6,6 +6,11 @@ export async function issueCredential(payload) {
   return response.data;
 }
 
+export async function issueBreakfastTicket(payload) {
+  const response = await httpClient.post('/credentials/breakfast', payload);
+  return response.data;
+}
+
 export async function queryByTransaction(transactionId) {
   const response = await httpClient.get(`/credentials/transaction/${transactionId}`);
   return response.data;

@@ -18,6 +18,7 @@ import tw.gov.moda.demohotel.client.dto.IssuerVcByCriteriaRequest;
 import tw.gov.moda.demohotel.client.dto.IssuerVcByCriteriaResponse;
 import tw.gov.moda.demohotel.client.dto.IssuerVcByDataTagResponse;
 import tw.gov.moda.demohotel.client.dto.IssuerVcQueryResponse;
+import tw.gov.moda.demohotel.model.BreakfastIssueCommand;
 import tw.gov.moda.demohotel.model.IssueCommand;
 import tw.gov.moda.demohotel.service.CredentialLifecycleService;
 import tw.gov.moda.demohotel.service.IssueService;
@@ -51,6 +52,18 @@ public class IssueController {
     @PostMapping("/issue")
     public ResponseEntity<IssuerIssueResponse> issue(@Valid @RequestBody IssueCommand command) {
         IssuerIssueResponse response = issueService.issueRoomCredential(command);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 繁體中文註解：發行早餐券 VC。
+     *
+     * @param command 早餐券資訊
+     * @return 發卡結果
+     */
+    @PostMapping("/breakfast")
+    public ResponseEntity<IssuerIssueResponse> issueBreakfast(@Valid @RequestBody BreakfastIssueCommand command) {
+        IssuerIssueResponse response = issueService.issueBreakfastTicket(command);
         return ResponseEntity.ok(response);
     }
 

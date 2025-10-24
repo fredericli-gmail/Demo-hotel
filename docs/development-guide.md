@@ -1,8 +1,14 @@
 # 開發與測試指引
 
+## Docker Compose 一鍵啟動
+- 於專案根目錄執行 `docker compose up --build` 可同時啟動前端、後端與 PostgreSQL。
+- 預設資料庫連線為 `demohotel/demohotel`，可於 `docker-compose.yml` 調整。
+- 若需釋出資源，請使用 `docker compose down`，資料會保留在 named volume `db_data` 中。
+
 ## 後端（Spring Boot）
 - 使用 `backend/pom.xml` 管理依賴，維持 JDK 17 與 Spring Boot 3.2.x。
-- 設定檔請更新 `backend/src/main/resources/application.yml` 中的發行端與驗證端 Access Token。
+- 預設資料庫改為 PostgreSQL，連線資訊可透過環境變數 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 覆寫。
+- 設定檔請更新 `backend/src/main/resources/application.yml` 中的發行端與驗證端 Access Token，或在容器環境設定對應環境變數。
 - 本地啟動：
   ```bash
   mvn spring-boot:run
@@ -16,6 +22,8 @@
   npm install
   npm run dev
   ```
+- 發卡頁的 `VC 模板代碼` 請填入發行端介面顯示的 `credentialType`，例如 `00000000_hlrc1023`，否則 DWVC-101 會回傳錯誤。
+- 早餐券發放頁 `/tickets/breakfast` 預設使用 `00000000_hlbft1023`，若需換模板請先確認欄位名稱：`room_nb`、`ticket_type`、`location`。
 - 開發時透過 Vite 代理呼叫後端 API，正式環境可改為透過 Nginx 轉發。
 - UI 與文案皆需採繁體中文，若有共用字詞請整理於 `src/styles` 或常數檔案中。
 

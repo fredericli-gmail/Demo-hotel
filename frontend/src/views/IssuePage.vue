@@ -5,24 +5,33 @@
       <h2>發卡作業</h2>
       <form @submit.prevent="handleSubmit">
         <div class="form-row">
-          <label for="vcUid">VC 模板代碼</label>
-          <input id="vcUid" v-model="form.vcUid" required />
+          <label for="vcUid">VC 模板代碼（credentialType）</label>
+          <input
+            id="vcUid"
+            v-model="form.vcUid"
+            required
+            placeholder="請輸入 credentialType，例如：00000000_hlrc1023"
+          />
         </div>
         <div class="form-row">
-          <label for="guestName">房客姓名</label>
-          <input id="guestName" v-model="form.guestName" required />
+          <label for="roomNb">房間號碼</label>
+          <input id="roomNb" v-model="form.roomNb" required />
         </div>
         <div class="form-row">
-          <label for="roomNumber">房號</label>
-          <input id="roomNumber" v-model="form.roomNumber" required />
+          <label for="roomType">房間型態</label>
+          <input id="roomType" v-model="form.roomType" placeholder="選填，例如：雙人房" />
         </div>
         <div class="form-row">
-          <label for="checkInDate">入住日期 (YYYYMMDD)</label>
-          <input id="checkInDate" v-model="form.checkInDate" required />
+          <label for="roomMemo">備註</label>
+          <input id="roomMemo" v-model="form.roomMemo" placeholder="選填，例如：需加床" />
         </div>
         <div class="form-row">
-          <label for="checkOutDate">退房日期 (YYYYMMDD)</label>
-          <input id="checkOutDate" v-model="form.checkOutDate" required />
+          <label for="checkInDate">入住日期</label>
+          <input id="checkInDate" type="date" v-model="form.checkInDate" @change="handleCheckInChange" required />
+        </div>
+        <div class="form-row">
+          <label for="checkOutDate">退房日期</label>
+          <input id="checkOutDate" type="date" v-model="form.checkOutDate" @change="handleCheckOutChange" required />
         </div>
         <div class="form-row">
           <label for="dataTag">資料標籤</label>
@@ -51,9 +60,10 @@ export default {
   data() {
     return {
       form: {
-        vcUid: '',
-        guestName: '',
-        roomNumber: '',
+        vcUid: '00000000_hlrc1023',
+        roomNb: '',
+        roomType: '',
+        roomMemo: '',
         checkInDate: '',
         checkOutDate: '',
         dataTag: ''
@@ -62,7 +72,68 @@ export default {
       result: null
     };
   },
+  created() {
+    // 繁體中文註解：預設入住日為今日，退房日為隔日，方便櫃檯快速操作。
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    this.form.checkInDate = this.formatDateForInput(today);
+    this.form.checkOutDate = this.formatDateForInput(tomorrow);
+  },
   methods: {
+    formatDateForInput(date) {
+      const year = date.getFullYear();
+      const month = `${date.getMonth() + 1}`.padStart(2, '0');
+      const day = `${date.getDate()}`.padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
+    formatDateForPayload(value) {
+      return value.replace(/-/g, '');
+    },
+    normalizeOptional(value) {
+      if (!value) {
+        return undefined;
+      }
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : undefined;
+    },
+    handleCheckInChange() {
+      if (!this.form.checkInDate) {
+        return;
+      }
+      const checkIn = new Date(this.form.checkInDate);
+      if (isNaN(checkIn.getTime())) {
+        return;
+      }
+      const checkOut = this.form.checkOutDate ? new Date(this.form.checkOutDate) : null;
+      if (!checkOut || isNaN(checkOut.getTime()) || checkOut <= checkIn) {
+        const nextDay = new Date(checkIn);
+        nextDay.setDate(nextDay.getDate() + 1);
+        this.form.checkOutDate = this.formatDateForInput(nextDay);
+      }
+    },
+    handleCheckOutChange() {
+      if (!this.form.checkInDate) {
+        return;
+      }
+      const checkIn = new Date(this.form.checkInDate);
+      if (isNaN(checkIn.getTime())) {
+        return;
+      }
+      const checkOut = new Date(this.form.checkOutDate);
+      if (isNaN(checkOut.getTime())) {
+        const nextDay = new Date(checkIn);
+        nextDay.setDate(nextDay.getDate() + 1);
+        this.form.checkOutDate = this.formatDateForInput(nextDay);
+        return;
+      }
+      if (checkOut <= checkIn) {
+        const nextDay = new Date(checkIn);
+        nextDay.setDate(nextDay.getDate() + 1);
+        this.form.checkOutDate = this.formatDateForInput(nextDay);
+        window.alert('退房日期必須晚於入住日期，系統已自動調整為隔日。');
+      }
+    },
     async handleSubmit() {
       if (this.loading) {
         return;
@@ -70,13 +141,23 @@ export default {
       this.loading = true;
       try {
         const payload = {
-          vcUid: this.form.vcUid,
-          guestName: this.form.guestName,
-          roomNumber: this.form.roomNumber,
-          checkInDate: this.form.checkInDate,
-          checkOutDate: this.form.checkOutDate,
-          dataTag: this.form.dataTag
+          vcUid: this.form.vcUid.trim(),
+          roomNb: this.form.roomNb.trim(),
+          roomType: this.normalizeOptional(this.form.roomType),
+          roomMemo: this.normalizeOptional(this.form.roomMemo),
+          checkInDate: this.formatDateForPayload(this.form.checkInDate),
+          checkOutDate: this.formatDateForPayload(this.form.checkOutDate),
+          dataTag: this.normalizeOptional(this.form.dataTag)
         };
+        if (!payload.roomType) {
+          delete payload.roomType;
+        }
+        if (!payload.roomMemo) {
+          delete payload.roomMemo;
+        }
+        if (!payload.dataTag) {
+          delete payload.dataTag;
+        }
         const response = await issueCredential(payload);
         this.result = response;
       } catch (error) {

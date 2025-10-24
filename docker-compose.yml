@@ -1,0 +1,37 @@
+# 繁體中文註解：使用 Docker Compose 一鍵啟動前端、後端與 PostgreSQL。
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: demohotel
+      POSTGRES_USER: demohotel
+      POSTGRES_PASSWORD: demohotel
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/demohotel
+      DB_USERNAME: demohotel
+      DB_PASSWORD: demohotel
+      WALLET_ISSUER_ACCESS_TOKEN: 8kp4RlF4k0VJBnn3XqwIW8X0fib0FAtU
+      WALLET_VERIFIER_ACCESS_TOKEN: 請設定驗證端AccessToken
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  db_data:

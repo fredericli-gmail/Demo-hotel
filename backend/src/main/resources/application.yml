@@ -6,19 +6,22 @@ spring:
   application:
     name: demo-hotel-backend # 繁體中文註解：系統顯示用名稱。
   datasource:
-    url: jdbc:h2:mem:hotel;MODE=MYSQL;DB_CLOSE_DELAY=-1 # 繁體中文註解：採用 H2 記憶體資料庫，模擬 MySQL 語法。
-    username: sa # 繁體中文註解：H2 預設帳號。
-    password: "" # 繁體中文註解：H2 預設無密碼。
-    driver-class-name: org.h2.Driver # 繁體中文註解：指定 H2 JDBC Driver。
+    url: ${DB_URL:jdbc:postgresql://db:5432/demohotel} # 繁體中文註解：預設指向 Docker Compose 內的 PostgreSQL 服務，可透過環境變數覆寫。
+    username: ${DB_USERNAME:demohotel} # 繁體中文註解：資料庫帳號，可於 docker-compose 或部署環境調整。
+    password: ${DB_PASSWORD:demohotel} # 繁體中文註解：資料庫密碼。
+    driver-class-name: org.postgresql.Driver # 繁體中文註解：指定 PostgreSQL JDBC Driver。
   jpa:
     hibernate:
-      ddl-auto: update # 繁體中文註解：開發階段自動更新資料表結構。
+      ddl-auto: update # 繁體中文註解：開發階段自動更新資料表結構，正式環境請改為 validate 或 none。
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect # 繁體中文註解：指定 PostgreSQL 方言，確保 SQL 語法相容。
     show-sql: false # 繁體中文註解：預設關閉 SQL 輸出，可視情況開啟。
 
 wallet:
   issuer:
     base-url: https://issuer-sandbox.wallet.gov.tw # 繁體中文註解：發行端模組沙盒網址，可依環境覆寫。
-    access-token: ${WALLET_ISSUER_ACCESS_TOKEN:請於部署前填入發行端AccessToken} # 繁體中文註解：發行端 Access Token，預設從環境變數讀取，若未提供請手動填入。
+    access-token: 8kp4RlF4k0VJBnn3XqwIW8X0fib0FAtU # 繁體中文註解：發行端 Access Token，請妥善保管避免外流。
   verifier:
     base-url: https://verifier-sandbox.wallet.gov.tw # 繁體中文註解：驗證端模組沙盒網址。
     access-token: ${WALLET_VERIFIER_ACCESS_TOKEN:請於部署前填入驗證端AccessToken} # 繁體中文註解：驗證端 Access Token，需向官方申請。

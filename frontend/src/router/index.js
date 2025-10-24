@@ -4,6 +4,7 @@ import IssuePage from '../views/IssuePage.vue';
 import InquiryPage from '../views/InquiryPage.vue';
 import LifecyclePage from '../views/LifecyclePage.vue';
 import VerificationPage from '../views/VerificationPage.vue';
+import BreakfastTicketPage from '../views/breakfast-ticket-page.vue';
 
 const routes = [
   {
@@ -25,6 +26,10 @@ const routes = [
   {
     path: '/verification',
     component: VerificationPage
+  },
+  {
+    path: '/tickets/breakfast',
+    component: BreakfastTicketPage
   }
 ];
 

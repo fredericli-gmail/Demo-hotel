@@ -5,6 +5,7 @@
       <h1>飯店電子房卡控台</h1>
       <nav class="layout__nav">
         <RouterLink to="/issue">發卡作業</RouterLink>
+        <RouterLink to="/tickets/breakfast">早餐券發放</RouterLink>
         <RouterLink to="/inquiry">發卡查詢</RouterLink>
         <RouterLink to="/lifecycle">卡片管理</RouterLink>
         <RouterLink to="/verification">驗證工具</RouterLink>
