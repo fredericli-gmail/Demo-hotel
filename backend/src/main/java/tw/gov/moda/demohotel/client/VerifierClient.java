@@ -8,7 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import tw.gov.moda.demohotel.client.dto.VerifierDeepLinkResponse;
@@ -44,21 +44,20 @@ public class VerifierClient {
      */
     public VerifierQrcodeResponse createAuthorizationQrcode(String ref, String transactionId, String isCallback) {
         String baseUrl = walletApiProperties.getVerifier().getBaseUrl() + "/api/oidvp/qrcode";
-        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-        params.add("ref", ref);
-        params.add("transactionId", transactionId);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .queryParam("ref", ref)
+                .queryParam("transactionId", transactionId);
         if (isCallback != null && isCallback.trim().length() > 0) {
-            params.add("isCallBack", isCallback);
+            builder.queryParam("isCallBack", isCallback);
         }
         HttpHeaders headers = createJsonHeaders(walletApiProperties.getVerifier().getAccessToken());
         HttpEntity<Void> entity = new HttpEntity<Void>(headers);
         try {
             ResponseEntity<VerifierQrcodeResponse> response = restTemplate.exchange(
-                    baseUrl + "?ref={ref}&transactionId={transactionId}" + (isCallback != null && isCallback.trim().length() > 0 ? "&isCallBack={isCallBack}" : ""),
+                    builder.build(true).toUri(),
                     HttpMethod.GET,
                     entity,
-                    VerifierQrcodeResponse.class,
-                    params);
+                    VerifierQrcodeResponse.class);
             return response.getBody();
         } catch (RestClientException ex) {
             LOGGER.error("呼叫 DWVP-01-101 失敗", ex);
