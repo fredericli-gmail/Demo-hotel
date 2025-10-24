@@ -1,11 +1,14 @@
 package tw.gov.moda.demohotel.client.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 繁體中文註解：對應 DWVC-101 的請求物件，封裝發卡所需資料。
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class IssuerIssueRequest {
 
     /**

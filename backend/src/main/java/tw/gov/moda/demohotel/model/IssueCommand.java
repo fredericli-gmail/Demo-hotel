@@ -8,13 +8,15 @@ import jakarta.validation.constraints.Size;
  */
 public class IssueCommand {
 
-    @NotBlank(message = "房客姓名不可為空白")
-    @Size(max = 64, message = "房客姓名長度超過限制")
-    private String guestName;
+    @NotBlank(message = "房間號碼不可為空白")
+    @Size(max = 32, message = "房間號碼長度超過限制")
+    private String roomNb;
 
-    @NotBlank(message = "房號不可為空白")
-    @Size(max = 32, message = "房號長度超過限制")
-    private String roomNumber;
+    @Size(max = 32, message = "房間型態長度超過限制")
+    private String roomType;
+
+    @Size(max = 64, message = "備註長度超過限制")
+    private String roomMemo;
 
     @NotBlank(message = "入住日期不可為空白")
     @Size(min = 8, max = 8, message = "入住日期格式錯誤")
@@ -29,20 +31,28 @@ public class IssueCommand {
 
     private String dataTag;
 
-    public String getGuestName() {
-        return guestName;
+    public String getRoomNb() {
+        return roomNb;
     }
 
-    public void setGuestName(String guestName) {
-        this.guestName = guestName;
+    public void setRoomNb(String roomNb) {
+        this.roomNb = roomNb;
     }
 
-    public String getRoomNumber() {
-        return roomNumber;
+    public String getRoomType() {
+        return roomType;
     }
 
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
+    public void setRoomType(String roomType) {
+        this.roomType = roomType;
+    }
+
+    public String getRoomMemo() {
+        return roomMemo;
+    }
+
+    public void setRoomMemo(String roomMemo) {
+        this.roomMemo = roomMemo;
     }
 
     public String getCheckInDate() {

@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import tw.gov.moda.demohotel.client.dto.IssuerCredentialStatusChangeResponse;
@@ -66,10 +67,21 @@ public class IssuerClient {
                     entity,
                     IssuerIssueResponse.class);
             return response.getBody();
+        } catch (HttpStatusCodeException ex) {
+            LOGGER.error("呼叫 DWVC-101 失敗，狀態碼={}，回應內容={}", ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            String message = "DWVC-101 呼叫失敗（狀態：" + ex.getStatusCode() + "，回應：" + sanitizeResponse(ex.getResponseBodyAsString()) + "）";
+            throw new ExternalApiException(message, ex);
         } catch (RestClientException ex) {
-            LOGGER.error("呼叫 DWVC-101 失敗", ex);
-            throw new ExternalApiException("DWVC-101 呼叫失敗", ex);
+            LOGGER.error("呼叫 DWVC-101 失敗，非預期錯誤", ex);
+            throw new ExternalApiException("DWVC-101 呼叫失敗（非預期錯誤）", ex);
         }
+    }
+
+    private String sanitizeResponse(String body) {
+        if (body == null || body.isBlank()) {
+            return "無內容";
+        }
+        return body.replaceAll("\\s+", " ").trim();
     }
 
     /**
