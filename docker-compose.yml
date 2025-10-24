@@ -21,7 +21,7 @@ services:
       DB_USERNAME: demohotel
       DB_PASSWORD: demohotel
       WALLET_ISSUER_ACCESS_TOKEN: 8kp4RlF4k0VJBnn3XqwIW8X0fib0FAtU
-      WALLET_VERIFIER_ACCESS_TOKEN: 請設定驗證端AccessToken
+      WALLET_VERIFIER_ACCESS_TOKEN: fKX11yWfp5mxbWKUlhzVBf7EZNuJk9KP
     ports:
       - "8080:8080"
 
