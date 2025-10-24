@@ -15,9 +15,10 @@
             id="vcUid"
             v-model="form.vcUid"
             required
+            readonly
             placeholder="請輸入 credentialType，例如：00000000_hlrc1023"
           />
-          <p class="helper-text">預設為官方房卡模板，可依需求替換為其他 credentialType。</p>
+          <p class="helper-text">系統固定使用房卡模板 `00000000_hlrc1023`，如需更換請洽管理人員調整設定。</p>
         </div>
         <div class="form-field">
           <label for="roomNb">房間號碼</label>
