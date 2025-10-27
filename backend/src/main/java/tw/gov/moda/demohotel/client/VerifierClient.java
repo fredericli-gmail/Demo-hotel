@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import tw.gov.moda.demohotel.client.dto.VerifierDeepLinkResponse;
@@ -81,6 +83,16 @@ public class VerifierClient {
                     entity,
                     VerifierResultResponse.class);
             return response.getBody();
+        } catch (HttpStatusCodeException ex) {
+            if (isVerificationPending(ex)) {
+                LOGGER.info("DWVP-01-201 尚未取得驗證結果，transactionId={}", request.getTransactionId());
+                VerifierResultResponse pending = new VerifierResultResponse();
+                pending.setTransactionId(request.getTransactionId());
+                pending.setMessage("尚未取得驗證結果，請稍後再試。");
+                return pending;
+            }
+            LOGGER.error("呼叫 DWVP-01-201 失敗：{}", ex.getResponseBodyAsString(), ex);
+            throw new ExternalApiException("DWVP-01-201 呼叫失敗", ex);
         } catch (RestClientException ex) {
             LOGGER.error("呼叫 DWVP-01-201 失敗", ex);
             throw new ExternalApiException("DWVP-01-201 呼叫失敗", ex);
@@ -122,5 +134,18 @@ public class VerifierClient {
             headers.set("Access-Token", accessToken);
         }
         return headers;
+    }
+
+    private boolean isVerificationPending(HttpStatusCodeException exception) {
+        if (exception.getStatusCode().value() != HttpStatus.BAD_REQUEST.value()) {
+            return false;
+        }
+        String body = exception.getResponseBodyAsString();
+        if (body == null || body.trim().isEmpty()) {
+            return true;
+        }
+        String normalized = body.toLowerCase();
+        return (normalized.contains("\"code\"") && normalized.contains("4002"))
+                || normalized.contains("not found");
     }
 }

@@ -21,8 +21,8 @@ services:
       DB_URL: jdbc:postgresql://db:5432/demohotel
       DB_USERNAME: demohotel
       DB_PASSWORD: demohotel
-      WALLET_ISSUER_ACCESS_TOKEN: 8kp4RlF4k0VJBnn3XqwIW8X0fib0FAtU
-      WALLET_VERIFIER_ACCESS_TOKEN: fKX11yWfp5mxbWKUlhzVBf7EZNuJk9KP
+      WALLET_ISSUER_ACCESS_TOKEN: iZpu42gbRAyAWuGGHGBXlE7KSVWPEhz5
+      WALLET_VERIFIER_ACCESS_TOKEN: duCrxCUexuxUJtg4OPKdIWlK7iLhKicy
     volumes:
       - ./backend:/workspace
       - backend_maven_repo:/root/.m2
@@ -37,6 +37,7 @@ services:
       - backend
     environment:
       ROLLUP_SKIP_NODEJS_NATIVE: "1"
+      VITE_BACKEND_ORIGIN: http://backend:8080
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules

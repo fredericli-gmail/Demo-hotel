@@ -20,13 +20,13 @@ spring:
 
 wallet:
   issuer:
-    base-url: https://issuer-sandbox.wallet.gov.tw # 繁體中文註解：發行端模組沙盒網址，可依環境覆寫。
-    access-token: 8kp4RlF4k0VJBnn3XqwIW8X0fib0FAtU # 繁體中文註解：發行端 Access Token，請妥善保管避免外流。
+    base-url: https://moda.uat.wallet.gov.tw/issuermgr/ # 繁體中文註解：發行端 UAT 環境網址，可依環境覆寫。
+    access-token: iZpu42gbRAyAWuGGHGBXlE7KSVWPEhz5 # 繁體中文註解：發行端 Access Token，請妥善保管避免外流。
   verifier:
-    base-url: https://verifier-sandbox.wallet.gov.tw # 繁體中文註解：驗證端模組沙盒網址。
-    access-token: ${WALLET_VERIFIER_ACCESS_TOKEN:fKX11yWfp5mxbWKUlhzVBf7EZNuJk9KP} # 繁體中文註解：驗證端 Access Token，需向官方申請。
+    base-url: https://moda.uat.wallet.gov.tw/verifiermgr/ # 繁體中文註解：驗證端 UAT 環境網址。
+    access-token: ${WALLET_VERIFIER_ACCESS_TOKEN:duCrxCUexuxUJtg4OPKdIWlK7iLhKicy} # 繁體中文註解：驗證端 Access Token，需向官方申請。
   driver-license-vp:
-    ref: ${VERIFIER_DRIVER_LICENSE_REF:00000000_demo_drivinglicense_202504251418} # 繁體中文註解：駕照 VP 驗證服務代碼。
+    ref: ${VERIFIER_DRIVER_LICENSE_REF:2-16-886-1-101-90001-20004-30004-30004-40004_sim_driver_license_1003} # 繁體中文註解：駕照 VP 驗證服務代碼。
     vp-uid: ${VERIFIER_DRIVER_LICENSE_VPUID:demo_drivinglicense_202504251418} # 繁體中文註解：駕照 VP 模板代碼。
 
 security:

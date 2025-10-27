@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -19,6 +20,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleExternalApiException(ExternalApiException ex) {
         LOGGER.error("外部 API 呼叫失敗", ex);
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("外部服務暫時無法使用：" + ex.getMessage());
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<String> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        LOGGER.warn("HTTP 方法不支援：{}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body("請使用正確的 HTTP 方法存取此資源。");
     }
 
     @ExceptionHandler(Exception.class)

@@ -28,12 +28,14 @@ public class DriverLicenseVerificationService {
 
     private static final int DEFAULT_EXPIRE_SECONDS = 300;
     private static final List<String> PREFERRED_ORDER = Arrays.asList(
+            "license_type",
             "name",
-            "id_number",
+            "license_number",
+            "gender",
             "roc_birthday",
-            "type",
-            "controlnumber",
-            "gDate"
+            "registered_address",
+            "expired_date",
+            "issue_date"
     );
 
     private final VerifierClient verifierClient;
