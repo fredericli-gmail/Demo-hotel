@@ -65,7 +65,7 @@ export default {
   data() {
     return {
       form: {
-        vcUid: '00000000_hlbft1023',
+        vcUid: '2-16-886-1-101-90001-20004-30004-30004-40004_hlbft1023',
         roomNb: '',
         ticketType: '',
         location: '',

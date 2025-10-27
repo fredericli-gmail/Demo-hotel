@@ -138,7 +138,7 @@ export default {
   data() {
     return {
       form: {
-        vcUid: '00000000_hlrc1023',
+        vcUid: '2-16-886-1-101-90001-20004-30004-30004-40004_hlrc1023',
         roomNb: '',
         roomType: '',
         roomMemo: '',

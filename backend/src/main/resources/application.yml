@@ -21,7 +21,7 @@ spring:
 wallet:
   issuer:
     base-url: https://moda.uat.wallet.gov.tw/issuermgr/ # 繁體中文註解：發行端 UAT 環境網址，可依環境覆寫。
-    access-token: iZpu42gbRAyAWuGGHGBXlE7KSVWPEhz5 # 繁體中文註解：發行端 Access Token，請妥善保管避免外流。
+    access-token: ${WALLET_ISSUER_ACCESS_TOKEN:iZpu42gbRAyAWuGGHGBXlE7KSVWPEhz5} # 繁體中文註解：發行端 Access Token，請妥善保管避免外流。
   verifier:
     base-url: https://moda.uat.wallet.gov.tw/verifiermgr/ # 繁體中文註解：驗證端 UAT 環境網址。
     access-token: ${WALLET_VERIFIER_ACCESS_TOKEN:duCrxCUexuxUJtg4OPKdIWlK7iLhKicy} # 繁體中文註解：驗證端 Access Token，需向官方申請。
