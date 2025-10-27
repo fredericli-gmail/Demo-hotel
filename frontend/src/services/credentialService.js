@@ -21,6 +21,11 @@ export async function pollCredentialCid(transactionId) {
   return response.data;
 }
 
+export async function revokeCredential(payload) {
+  const response = await httpClient.post('/credentials/revoke', payload);
+  return response.data;
+}
+
 export async function queryByDataTag(dataTag, page, size) {
   const params = {};
   if (page !== undefined && page !== null) {

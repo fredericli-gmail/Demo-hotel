@@ -13,11 +13,14 @@ import tw.gov.moda.demohotel.client.dto.IssuerVcQueryResponse;
 import tw.gov.moda.demohotel.client.dto.VcField;
 import tw.gov.moda.demohotel.domain.VcIssueRecord;
 import tw.gov.moda.demohotel.dto.CredentialCidResponse;
+import tw.gov.moda.demohotel.dto.CredentialRevokeRequest;
 import tw.gov.moda.demohotel.model.BreakfastIssueCommand;
 import tw.gov.moda.demohotel.model.IssueCommand;
 import tw.gov.moda.demohotel.repository.VcIssueRecordRepository;
 import tw.gov.moda.demohotel.exception.CredentialPendingException;
 import tw.gov.moda.demohotel.exception.ExternalApiException;
+import tw.gov.moda.demohotel.client.dto.IssuerCredentialStatusChangeResponse;
+import tw.gov.moda.demohotel.service.CredentialLifecycleService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,10 +46,14 @@ public class IssueService {
 
     private final IssuerClient issuerClient;
     private final VcIssueRecordRepository vcIssueRecordRepository;
+    private final CredentialLifecycleService credentialLifecycleService;
 
-    public IssueService(IssuerClient issuerClient, VcIssueRecordRepository vcIssueRecordRepository) {
+    public IssueService(IssuerClient issuerClient,
+                        VcIssueRecordRepository vcIssueRecordRepository,
+                        CredentialLifecycleService credentialLifecycleService) {
         this.issuerClient = issuerClient;
         this.vcIssueRecordRepository = vcIssueRecordRepository;
+        this.credentialLifecycleService = credentialLifecycleService;
     }
 
     /**
@@ -64,7 +71,8 @@ public class IssueService {
         String credentialJwt = response.getCredential();
         String cid = extractCidFromCredential(credentialJwt);
         persistIssueRecord(command.getVcUid(), command.getDataTag(), command.getCheckInDate(), command.getCheckOutDate(),
-                response.getTransactionId(), command.getApplicant(), cid);
+                response.getTransactionId(), command.getApplicant(), cid,
+                command.getRoomNb(), command.getRoomType(), command.getRoomMemo(), null, null);
         LOGGER.info("DWVC-101 回傳交易序號：{}", response.getTransactionId());
         return response;
     }
@@ -84,7 +92,8 @@ public class IssueService {
         String credentialJwt = response.getCredential();
         String cid = extractCidFromCredential(credentialJwt);
         persistIssueRecord(command.getVcUid(), command.getDataTag(), command.getValidDate(), command.getValidDate(),
-                response.getTransactionId(), command.getApplicant(), cid);
+                response.getTransactionId(), command.getApplicant(), cid,
+                command.getRoomNb(), null, null, command.getTicketType(), command.getLocation());
         LOGGER.info("DWVC-101 回傳交易序號：{}", response.getTransactionId());
         return response;
     }
@@ -183,7 +192,12 @@ public class IssueService {
                                     String expiredDate,
                                     String transactionId,
                                     String applicant,
-                                    String cid) {
+                                    String cid,
+                                    String roomNb,
+                                    String roomType,
+                                    String roomMemo,
+                                    String ticketType,
+                                    String location) {
         VcIssueRecord record = new VcIssueRecord();
         record.setTransactionId(transactionId);
         record.setVcUid(vcUid);
@@ -199,6 +213,21 @@ public class IssueService {
         }
         if (StringUtils.hasText(cid)) {
             record.setCid(cid);
+        }
+        if (StringUtils.hasText(roomNb)) {
+            record.setRoomNb(roomNb);
+        }
+        if (StringUtils.hasText(roomType)) {
+            record.setRoomType(roomType);
+        }
+        if (StringUtils.hasText(roomMemo)) {
+            record.setRoomMemo(roomMemo);
+        }
+        if (StringUtils.hasText(ticketType)) {
+            record.setTicketType(ticketType);
+        }
+        if (StringUtils.hasText(location)) {
+            record.setLocation(location);
         }
         record.setCreatedAt(LocalDateTime.now());
         vcIssueRecordRepository.save(record);
@@ -280,5 +309,32 @@ public class IssueService {
             // 使用者尚未掃描，保持等待狀態
         }
         return response;
+    }
+
+    public IssuerCredentialStatusChangeResponse revokeCredential(CredentialRevokeRequest request) {
+        if (!StringUtils.hasText(request.getVcUid()) || !StringUtils.hasText(request.getRoomNb())) {
+            throw new ExternalApiException("撤銷請求缺少必要參數");
+        }
+        List<VcIssueRecord> records = vcIssueRecordRepository.findByVcUidAndRoomNbOrderByCreatedAtDesc(
+                request.getVcUid(), request.getRoomNb());
+        for (VcIssueRecord record : records) {
+            if (matches(record.getRoomType(), request.getRoomType())
+                    && matches(record.getRoomMemo(), request.getRoomMemo())
+                    && matches(record.getTicketType(), request.getTicketType())
+                    && matches(record.getLocation(), request.getLocation())) {
+                if (!StringUtils.hasText(record.getCid())) {
+                    throw new ExternalApiException("找到符合資料的紀錄，但尚未取得 CID");
+                }
+                return credentialLifecycleService.changeStatus(record.getCid(), "revocation");
+            }
+        }
+        throw new ExternalApiException("找不到符合條件的憑證可撤銷");
+    }
+
+    private boolean matches(String stored, String target) {
+        if (!StringUtils.hasText(target)) {
+            return true;
+        }
+        return StringUtils.hasText(stored) && stored.equals(target);
     }
 }

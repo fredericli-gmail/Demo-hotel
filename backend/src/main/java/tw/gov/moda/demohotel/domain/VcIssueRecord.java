@@ -41,6 +41,21 @@ public class VcIssueRecord {
     @Column(name = "cid", length = 128)
     private String cid;
 
+    @Column(name = "room_nb", length = 64)
+    private String roomNb;
+
+    @Column(name = "room_type", length = 64)
+    private String roomType;
+
+    @Column(name = "room_memo", length = 256)
+    private String roomMemo;
+
+    @Column(name = "ticket_type", length = 64)
+    private String ticketType;
+
+    @Column(name = "location", length = 128)
+    private String location;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -106,6 +121,46 @@ public class VcIssueRecord {
 
     public void setCid(String cid) {
         this.cid = cid;
+    }
+
+    public String getRoomNb() {
+        return roomNb;
+    }
+
+    public void setRoomNb(String roomNb) {
+        this.roomNb = roomNb;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(String roomType) {
+        this.roomType = roomType;
+    }
+
+    public String getRoomMemo() {
+        return roomMemo;
+    }
+
+    public void setRoomMemo(String roomMemo) {
+        this.roomMemo = roomMemo;
+    }
+
+    public String getTicketType() {
+        return ticketType;
+    }
+
+    public void setTicketType(String ticketType) {
+        this.ticketType = ticketType;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public LocalDateTime getCreatedAt() {

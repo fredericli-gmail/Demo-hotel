@@ -3,8 +3,8 @@
     <section class="card">
       <header class="section-heading">
         <div>
-          <h2 class="section-title">QR Code 解析工具</h2>
-          <p class="section-subtitle">貼上加密 QR Code 字串，即可驗證並還原原始資料。</p>
+          <h2 class="section-title">驗證房卡/票券</h2>
+          <p class="section-subtitle">貼上加密字串即可檢視房卡或早餐券資訊，必要時支援憑證撤銷。</p>
         </div>
       </header>
       <form class="form-grid" @submit.prevent="handleDecode">
@@ -37,6 +37,20 @@
         <p class="result-status" :class="result.success ? 'success' : 'error'">
           {{ result.success ? '驗證通過' : '驗證失敗' }}
         </p>
+        <div v-if="revokeCandidate" class="revoke-section">
+          <h4>偵測到早餐券</h4>
+          <ul>
+            <li><strong>房間號碼：</strong>{{ revokeCandidate.roomNb }}</li>
+            <li><strong>票券類別：</strong>{{ revokeCandidate.ticketType || '－' }}</li>
+            <li><strong>餐廳位置：</strong>{{ revokeCandidate.location || '－' }}</li>
+          </ul>
+          <div class="revoke-actions">
+            <button class="button button--danger" type="button" :disabled="revoking" @click="handleRevoke">
+              {{ revoking ? '處理中...' : '使用' }}
+            </button>
+          </div>
+        </div>
+        <p v-if="revokeMessage" class="revoke-message">{{ revokeMessage }}</p>
         <div v-if="result.data" class="result-grid">
           <div v-for="(value, key) in result.data" :key="key" class="result-item">
             <span class="result-key">{{ key }}</span>
@@ -61,6 +75,7 @@
 
 <script>
 import { decodeQrCode } from '../services/reverseQrService';
+import { revokeCredential } from '../services/credentialService';
 
 export default {
   name: 'ReverseQrcodePage',
@@ -71,7 +86,11 @@ export default {
       },
       loading: false,
       result: null,
-      error: null
+      error: null,
+      originalMeta: null,
+      revokeCandidate: null,
+      revoking: false,
+      revokeMessage: null
     };
   },
   methods: {
@@ -85,7 +104,10 @@ export default {
       this.loading = true;
       this.error = null;
       this.result = null;
+      this.revokeCandidate = null;
+      this.revokeMessage = null;
 
+      this.originalMeta = this.parseOriginalMeta(this.form.encryptedData);
       const payload = {
         encryptedData: this.form.encryptedData.trim()
       };
@@ -96,8 +118,13 @@ export default {
         if (!this.result.success) {
           this.error = this.result.message;
         }
+        this.revokeCandidate = this.result.success ? this.extractRevokeCandidate(this.originalMeta, this.result.data) : null;
+        if (!this.revokeCandidate && this.originalMeta && this.originalMeta?.t === 'hlbft') {
+          this.revokeMessage = '未找到符合條件的早餐券發卡紀錄或尚未取得 CID。';
+        }
       } catch (err) {
         this.error = err.message || '解析失敗，請稍後再試';
+        this.revokeCandidate = null;
       } finally {
         this.loading = false;
       }
@@ -106,6 +133,9 @@ export default {
       this.form.encryptedData = '';
       this.result = null;
       this.error = null;
+      this.originalMeta = null;
+      this.revokeCandidate = null;
+      this.revokeMessage = null;
     },
     prettyJson(raw) {
       try {
@@ -127,6 +157,103 @@ export default {
         }
       }
       return String(value);
+    },
+    parseOriginalMeta(raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return parsed;
+        }
+      } catch (error) {
+        return null;
+      }
+      return null;
+    },
+    extractRevokeCandidate(meta, data) {
+      if (!meta || meta.t !== 'hlbft') {
+        return null;
+      }
+      const vcUid = '2-16-886-1-101-90001-20004-30004-30004-40004_hlbft1023';
+      const subject = this.normalizeSubject(data?.credentialSubject || data);
+      const roomNb = subject.room_nb || subject.roomNb;
+      const ticketType = subject.ticket_type || subject.ticketType;
+      const location = subject.location || subject.Location;
+      if (!roomNb) {
+        return null;
+      }
+      return {
+        vcUid,
+        roomNb,
+        ticketType: ticketType || '',
+        location: location || ''
+      };
+    },
+    resolveVcRoot(data) {
+      if (data && typeof data === 'object') {
+        if (data.vc && typeof data.vc === 'object') {
+          return data.vc;
+        }
+        return data;
+      }
+      return {};
+    },
+    normalizeToArray(value) {
+      if (!value) {
+        return [];
+      }
+      return Array.isArray(value) ? value : [value];
+    },
+    normalizeSubject(subject) {
+      if (!subject) {
+        return {};
+      }
+      if (Array.isArray(subject)) {
+        return subject.reduce((acc, item) => {
+          if (item && typeof item === 'object') {
+            return Object.assign(acc, item);
+          }
+          return acc;
+        }, {});
+      }
+      if (typeof subject === 'object') {
+        return subject;
+      }
+      return {};
+    },
+    resolveVcUid(vcRoot, fallbackType) {
+      if (!vcRoot) {
+        return fallbackType;
+      }
+      if (typeof vcRoot.credentialType === 'string') {
+        return vcRoot.credentialType;
+      }
+      if (vcRoot.credentialType && Array.isArray(vcRoot.credentialType)) {
+        const candidate = vcRoot.credentialType.find((item) => typeof item === 'string' && item.includes('hlbft'));
+        if (candidate) {
+          return candidate;
+        }
+      }
+      if (typeof vcRoot.vcUid === 'string') {
+        return vcRoot.vcUid;
+      }
+      return fallbackType;
+    },
+    async handleRevoke() {
+      if (!this.revokeCandidate) {
+        return;
+      }
+      this.revoking = true;
+      this.revokeMessage = null;
+      try {
+        await revokeCredential(this.revokeCandidate);
+        this.revokeMessage = '早餐券已成功撤銷。';
+        window.alert('早餐券已成功撤銷。');
+        this.revokeCandidate = null;
+      } catch (error) {
+        this.revokeMessage = error.message || '撤銷失敗，請稍後再試。';
+      } finally {
+        this.revoking = false;
+      }
     }
   }
 };
@@ -152,6 +279,54 @@ textarea {
   font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 14px;
   line-height: 1.5;
+}
+
+.revoke-section {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.revoke-section h4 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #9f1239;
+}
+
+.revoke-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.revoke-section li {
+  font-size: 14px;
+  color: #7f1d1d;
+}
+
+.revoke-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.revoke-message {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #9f1239;
+}
+
+.button--danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.button--danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .result-block {

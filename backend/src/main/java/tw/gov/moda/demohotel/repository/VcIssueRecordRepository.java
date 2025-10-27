@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface VcIssueRecordRepository extends JpaRepository<VcIssueRecord, Long> {
 
     Optional<VcIssueRecord> findByTransactionId(String transactionId);
+
+    java.util.List<VcIssueRecord> findByVcUidAndRoomNbOrderByCreatedAtDesc(String vcUid, String roomNb);
 }

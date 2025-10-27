@@ -20,6 +20,7 @@ import tw.gov.moda.demohotel.client.dto.IssuerVcByDataTagResponse;
 import tw.gov.moda.demohotel.client.dto.IssuerVcQueryResponse;
 import tw.gov.moda.demohotel.model.BreakfastIssueCommand;
 import tw.gov.moda.demohotel.model.IssueCommand;
+import tw.gov.moda.demohotel.dto.CredentialRevokeRequest;
 import tw.gov.moda.demohotel.dto.CredentialCidResponse;
 import tw.gov.moda.demohotel.service.CredentialLifecycleService;
 import tw.gov.moda.demohotel.service.IssueService;
@@ -128,6 +129,15 @@ public class IssueController {
     public ResponseEntity<IssuerCredentialStatusChangeResponse> changeStatus(@PathVariable("cid") String cid,
                                                                              @PathVariable("action") String action) {
         IssuerCredentialStatusChangeResponse response = credentialLifecycleService.changeStatus(cid, action);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 繁體中文註解：依據解析出的欄位資訊撤銷憑證。
+     */
+    @PostMapping("/revoke")
+    public ResponseEntity<IssuerCredentialStatusChangeResponse> revoke(@Valid @RequestBody CredentialRevokeRequest request) {
+        IssuerCredentialStatusChangeResponse response = issueService.revokeCredential(request);
         return ResponseEntity.ok(response);
     }
 
