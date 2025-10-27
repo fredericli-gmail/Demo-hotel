@@ -38,15 +38,14 @@
           {{ result.success ? '驗證通過' : '驗證失敗' }}
         </p>
         <div v-if="revokeCandidate" class="revoke-section">
-          <h4>偵測到早餐券</h4>
+          <h4>{{ revokeTitle || '偵測到可撤銷的憑證' }}</h4>
           <ul>
-            <li><strong>房間號碼：</strong>{{ revokeCandidate.roomNb }}</li>
-            <li><strong>票券類別：</strong>{{ revokeCandidate.ticketType || '－' }}</li>
-            <li><strong>餐廳位置：</strong>{{ revokeCandidate.location || '－' }}</li>
-            <li><strong>憑證 CID：</strong>{{ revokeCandidate.cid || '尚未取得' }}</li>
+            <li v-for="item in revokeDetails" :key="item.label">
+              <strong>{{ item.label }}：</strong>{{ item.value }}
+            </li>
           </ul>
           <div class="revoke-actions">
-            <button class="button button--danger" type="button" :disabled="revoking" @click="handleRevoke">
+            <button class="button button--danger" type="button" :disabled="revoking || !revokeCandidate.cid" @click="handleRevoke">
               {{ revoking ? '處理中...' : '使用' }}
             </button>
           </div>
@@ -90,9 +89,28 @@ export default {
       error: null,
       originalMeta: null,
       revokeCandidate: null,
+      revokeTitle: '',
       revoking: false,
       revokeMessage: null
     };
+  },
+  computed: {
+    revokeDetails() {
+      if (!this.revokeCandidate) {
+        return [];
+      }
+      const rows = [];
+      rows.push({ label: '房間號碼', value: this.revokeCandidate.roomNb || '－' });
+      if (this.originalMeta?.t === 'hlrc') {
+        rows.push({ label: '房間型態', value: this.revokeCandidate.roomType || '－' });
+        rows.push({ label: '備註', value: this.revokeCandidate.roomMemo || '－' });
+      } else if (this.originalMeta?.t === 'hlbft') {
+        rows.push({ label: '票券類別', value: this.revokeCandidate.ticketType || '－' });
+        rows.push({ label: '餐廳位置', value: this.revokeCandidate.location || '－' });
+      }
+      rows.push({ label: '憑證 CID', value: this.revokeCandidate.cid || '尚未取得' });
+      return rows;
+    }
   },
   methods: {
     async handleDecode() {
@@ -120,10 +138,13 @@ export default {
           this.error = this.result.message;
         }
         this.revokeCandidate = this.result.success ? this.extractRevokeCandidate(this.originalMeta, this.result.data) : null;
+        this.revokeTitle = this.buildRevokeTitle(this.originalMeta);
         if (this.revokeCandidate) {
           await this.fetchRevokeCid();
         } else if (this.originalMeta && this.originalMeta?.t === 'hlbft') {
           this.revokeMessage = '未找到符合條件的早餐券發卡紀錄或尚未取得 CID。';
+        } else if (this.originalMeta && this.originalMeta?.t === 'hlrc') {
+          this.revokeMessage = '未找到符合條件的房客卡發卡紀錄或尚未取得 CID。';
         }
       } catch (err) {
         this.error = err.message || '解析失敗，請稍後再試';
@@ -139,6 +160,7 @@ export default {
       this.originalMeta = null;
       this.revokeCandidate = null;
       this.revokeMessage = null;
+      this.revokeTitle = '';
     },
     prettyJson(raw) {
       try {
@@ -172,40 +194,52 @@ export default {
       }
       return null;
     },
+    buildRevokeTitle(meta) {
+      if (!meta || !meta.t) {
+        return '';
+      }
+      if (meta.t === 'hlbft') {
+        return '偵測到早餐券';
+      }
+      if (meta.t === 'hlrc') {
+        return '偵測到房客卡';
+      }
+      return '';
+    },
     extractRevokeCandidate(meta, data) {
-      if (!meta || meta.t !== 'hlbft') {
+      if (!meta || !meta.t) {
         return null;
       }
-      const vcUid = '2-16-886-1-101-90001-20004-30004-30004-40004_hlbft1023';
-      const subject = this.normalizeSubject(data?.credentialSubject || data);
-      const roomNb = subject.room_nb || subject.roomNb;
-      const ticketType = subject.ticket_type || subject.ticketType;
-      const location = subject.location || subject.Location;
-      if (!roomNb) {
-        return null;
-      }
-      return {
-        vcUid,
-        roomNb,
-        ticketType: ticketType || '',
-        location: location || '',
+
+      const candidate = {
+        vcUid: '',
+        roomNb: '',
+        roomType: '',
+        roomMemo: '',
+        ticketType: '',
+        location: '',
         cid: null
       };
-    },
-    resolveVcRoot(data) {
-      if (data && typeof data === 'object') {
-        if (data.vc && typeof data.vc === 'object') {
-          return data.vc;
-        }
-        return data;
+
+      if (meta.t === 'hlbft') {
+        candidate.vcUid = '2-16-886-1-101-90001-20004-30004-30004-40004_hlbft1023';
+      } else if (meta.t === 'hlrc') {
+        candidate.vcUid = '2-16-886-1-101-90001-20004-30004-30004-40004_hlrc1023';
+      } else {
+        return null;
       }
-      return {};
-    },
-    normalizeToArray(value) {
-      if (!value) {
-        return [];
+
+      const subject = this.normalizeSubject(data?.credentialSubject || data);
+      candidate.roomNb = subject.room_nb || subject.roomNb || '';
+      candidate.roomType = subject.room_type || subject.roomType || '';
+      candidate.roomMemo = subject.room_memo || subject.roomMemo || '';
+      candidate.ticketType = subject.ticket_type || subject.ticketType || '';
+      candidate.location = subject.location || subject.Location || '';
+
+      if (!candidate.roomNb) {
+        return null;
       }
-      return Array.isArray(value) ? value : [value];
+      return candidate;
     },
     normalizeSubject(subject) {
       if (!subject) {
@@ -262,6 +296,11 @@ export default {
     },
     async handleRevoke() {
       if (!this.revokeCandidate) {
+        return;
+      }
+      if (this.originalMeta?.t === 'hlrc') {
+        this.revokeMessage = '歡迎使用，祝您入住愉快。';
+        window.alert('歡迎使用，祝您入住愉快。');
         return;
       }
       if (!this.revokeCandidate.cid) {
