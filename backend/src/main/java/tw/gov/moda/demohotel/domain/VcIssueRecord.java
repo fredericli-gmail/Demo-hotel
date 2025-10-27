@@ -35,6 +35,12 @@ public class VcIssueRecord {
     @Column(name = "expired_date", length = 16)
     private String expiredDate;
 
+    @Column(name = "applicant", length = 128)
+    private String applicant;
+
+    @Column(name = "cid", length = 128)
+    private String cid;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -84,6 +90,22 @@ public class VcIssueRecord {
 
     public void setExpiredDate(String expiredDate) {
         this.expiredDate = expiredDate;
+    }
+
+    public String getApplicant() {
+        return applicant;
+    }
+
+    public void setApplicant(String applicant) {
+        this.applicant = applicant;
+    }
+
+    public String getCid() {
+        return cid;
+    }
+
+    public void setCid(String cid) {
+        this.cid = cid;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -30,6 +30,11 @@ public class IssuerIssueResponse {
      */
     private IssuerIssueWarnings warnings = new IssuerIssueWarnings();
 
+    /**
+     * 繁體中文註解：發行端回傳的 JWT 憑證內容。
+     */
+    private String credential;
+
     public String getTransactionId() {
         return transactionId;
     }
@@ -64,6 +69,14 @@ public class IssuerIssueResponse {
         } else {
             this.warnings = warnings;
         }
+    }
+
+    public String getCredential() {
+        return credential;
+    }
+
+    public void setCredential(String credential) {
+        this.credential = credential;
     }
 
     /**

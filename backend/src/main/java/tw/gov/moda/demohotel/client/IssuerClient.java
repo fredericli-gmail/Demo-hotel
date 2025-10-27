@@ -21,6 +21,7 @@ import tw.gov.moda.demohotel.client.dto.IssuerVcByCriteriaResponse;
 import tw.gov.moda.demohotel.client.dto.IssuerVcByDataTagResponse;
 import tw.gov.moda.demohotel.client.dto.IssuerVcQueryResponse;
 import tw.gov.moda.demohotel.config.WalletApiProperties;
+import tw.gov.moda.demohotel.exception.CredentialPendingException;
 import tw.gov.moda.demohotel.exception.ExternalApiException;
 
 import java.util.Collections;
@@ -100,6 +101,13 @@ public class IssuerClient {
                     entity,
                     IssuerVcQueryResponse.class);
             return response.getBody();
+        } catch (HttpStatusCodeException ex) {
+            if (ex.getStatusCode().value() == 400) {
+                throw new CredentialPendingException("Credential not ready yet", ex);
+            }
+            LOGGER.error("呼叫 DWVC-201 失敗，transactionId={}，狀態={} 內容={}",
+                    transactionId, ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw new ExternalApiException("DWVC-201 呼叫失敗", ex);
         } catch (RestClientException ex) {
             LOGGER.error("呼叫 DWVC-201 失敗，transactionId={}", transactionId, ex);
             throw new ExternalApiException("DWVC-201 呼叫失敗", ex);

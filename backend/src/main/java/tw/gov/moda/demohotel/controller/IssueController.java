@@ -20,6 +20,7 @@ import tw.gov.moda.demohotel.client.dto.IssuerVcByDataTagResponse;
 import tw.gov.moda.demohotel.client.dto.IssuerVcQueryResponse;
 import tw.gov.moda.demohotel.model.BreakfastIssueCommand;
 import tw.gov.moda.demohotel.model.IssueCommand;
+import tw.gov.moda.demohotel.dto.CredentialCidResponse;
 import tw.gov.moda.demohotel.service.CredentialLifecycleService;
 import tw.gov.moda.demohotel.service.IssueService;
 import tw.gov.moda.demohotel.service.IssueStatusService;
@@ -76,6 +77,15 @@ public class IssueController {
     @GetMapping("/transaction/{transactionId}")
     public ResponseEntity<IssuerVcQueryResponse> queryByTransaction(@PathVariable("transactionId") String transactionId) {
         IssuerVcQueryResponse response = issueStatusService.queryByTransaction(transactionId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 繁體中文註解：輪詢憑證 CID，若發卡成功會回傳唯一序號。
+     */
+    @GetMapping("/transaction/{transactionId}/cid")
+    public ResponseEntity<CredentialCidResponse> pollCredentialCid(@PathVariable("transactionId") String transactionId) {
+        CredentialCidResponse response = issueService.pollCredentialCid(transactionId);
         return ResponseEntity.ok(response);
     }
 
