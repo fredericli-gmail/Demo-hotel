@@ -35,6 +35,10 @@
           <label for="validDate">使用日期</label>
           <input id="validDate" type="date" v-model="form.validDate" required />
         </div>
+        <div class="form-field">
+          <label for="applicant">申請人</label>
+          <input id="applicant" v-model="form.applicant" required />
+        </div>
         <div class="form-field form-field--full">
           <label for="dataTag">資料標籤</label>
           <input id="dataTag" v-model="form.dataTag" placeholder="可記錄批次或活動名稱，選填" />
@@ -56,7 +60,7 @@
 </template>
 
 <script>
-import { issueBreakfastTicket } from '../services/credentialService';
+import { issueBreakfastTicket, pollCredentialCid } from '../services/credentialService';
 import QrModal from '../components/qr-modal.vue';
 
 export default {
@@ -70,11 +74,14 @@ export default {
         ticketType: '',
         location: '',
         validDate: '',
-        dataTag: ''
+        dataTag: '',
+        applicant: ''
       },
       loading: false,
       result: null,
-      showResultModal: false
+      showResultModal: false,
+      pendingTransactionId: null,
+      credentialPollingId: null
     };
   },
   created() {
@@ -99,6 +106,35 @@ export default {
       const trimmed = value.trim();
       return trimmed.length > 0 ? trimmed : undefined;
     },
+    startCredentialPolling() {
+      this.clearCredentialPolling();
+      if (!this.pendingTransactionId) {
+        return;
+      }
+      this.credentialPollingId = window.setInterval(this.fetchCredentialCid, 3000);
+    },
+    async fetchCredentialCid() {
+      if (!this.pendingTransactionId) {
+        return;
+      }
+      try {
+        const response = await pollCredentialCid(this.pendingTransactionId);
+        if (response && response.ready && response.cid) {
+          this.clearCredentialPolling();
+          this.result = null;
+          this.showResultModal = false;
+          window.alert(`早餐券已發放成功，CID：${response.cid}`);
+        }
+      } catch (error) {
+        console.error('查詢早餐券 CID 失敗', error);
+      }
+    },
+    clearCredentialPolling() {
+      if (this.credentialPollingId) {
+        window.clearInterval(this.credentialPollingId);
+        this.credentialPollingId = null;
+      }
+    },
     async handleSubmit() {
       if (this.loading) {
         return;
@@ -111,7 +147,8 @@ export default {
           ticketType: this.normalizeOptional(this.form.ticketType),
           location: this.normalizeOptional(this.form.location),
           validDate: this.formatDateForPayload(this.form.validDate),
-          dataTag: this.normalizeOptional(this.form.dataTag)
+          dataTag: this.normalizeOptional(this.form.dataTag),
+          applicant: this.form.applicant.trim()
         };
         if (!payload.ticketType) {
           delete payload.ticketType;
@@ -123,8 +160,16 @@ export default {
           delete payload.dataTag;
         }
         const response = await issueBreakfastTicket(payload);
-        this.result = response;
-        this.showResultModal = true;
+        this.pendingTransactionId = response.transactionId || null;
+        if (response && response.cid) {
+          this.result = null;
+          this.showResultModal = false;
+          window.alert(`早餐券已發放成功，CID：${response.cid}`);
+        } else {
+          this.result = response;
+          this.showResultModal = true;
+          this.startCredentialPolling();
+        }
       } catch (error) {
         window.alert(error.message);
       } finally {
@@ -133,7 +178,11 @@ export default {
     },
     handleModalClose() {
       this.showResultModal = false;
+      this.clearCredentialPolling();
     }
+  },
+  beforeUnmount() {
+    this.clearCredentialPolling();
   }
 };
 </script>

@@ -9,17 +9,28 @@ import org.springframework.transaction.annotation.Transactional;
 import tw.gov.moda.demohotel.client.IssuerClient;
 import tw.gov.moda.demohotel.client.dto.IssuerIssueRequest;
 import tw.gov.moda.demohotel.client.dto.IssuerIssueResponse;
+import tw.gov.moda.demohotel.client.dto.IssuerVcQueryResponse;
 import tw.gov.moda.demohotel.client.dto.VcField;
 import tw.gov.moda.demohotel.domain.VcIssueRecord;
+import tw.gov.moda.demohotel.dto.CredentialCidResponse;
 import tw.gov.moda.demohotel.model.BreakfastIssueCommand;
 import tw.gov.moda.demohotel.model.IssueCommand;
 import tw.gov.moda.demohotel.repository.VcIssueRecordRepository;
+import tw.gov.moda.demohotel.exception.CredentialPendingException;
+import tw.gov.moda.demohotel.exception.ExternalApiException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import org.springframework.util.StringUtils;
+
+import tw.gov.moda.demohotel.dto.CredentialCidResponse;
+import tw.gov.moda.demohotel.exception.CredentialPendingException;
 
 /**
  * 繁體中文註解：負責整合發卡流程，包含資料轉換、呼叫外部 API 以及紀錄交易。
@@ -50,7 +61,10 @@ public class IssueService {
         LOGGER.info("開始呼叫 DWVC-101，vcUid={}, dataTag={}, roomNb={}", command.getVcUid(), command.getDataTag(), command.getRoomNb());
         LOGGER.info("DWVC-101 請求內容：{}", toJsonSafe(request));
         IssuerIssueResponse response = issuerClient.issueCredential(request);
-        persistIssueRecord(command.getVcUid(), command.getDataTag(), command.getCheckInDate(), command.getCheckOutDate(), response.getTransactionId());
+        String credentialJwt = response.getCredential();
+        String cid = extractCidFromCredential(credentialJwt);
+        persistIssueRecord(command.getVcUid(), command.getDataTag(), command.getCheckInDate(), command.getCheckOutDate(),
+                response.getTransactionId(), command.getApplicant(), cid);
         LOGGER.info("DWVC-101 回傳交易序號：{}", response.getTransactionId());
         return response;
     }
@@ -67,7 +81,10 @@ public class IssueService {
         LOGGER.info("開始呼叫 DWVC-101，vcUid={}, dataTag={}, roomNb={}", command.getVcUid(), command.getDataTag(), command.getRoomNb());
         LOGGER.info("DWVC-101 請求內容：{}", toJsonSafe(request));
         IssuerIssueResponse response = issuerClient.issueCredential(request);
-        persistIssueRecord(command.getVcUid(), command.getDataTag(), command.getValidDate(), command.getValidDate(), response.getTransactionId());
+        String credentialJwt = response.getCredential();
+        String cid = extractCidFromCredential(credentialJwt);
+        persistIssueRecord(command.getVcUid(), command.getDataTag(), command.getValidDate(), command.getValidDate(),
+                response.getTransactionId(), command.getApplicant(), cid);
         LOGGER.info("DWVC-101 回傳交易序號：{}", response.getTransactionId());
         return response;
     }
@@ -160,7 +177,13 @@ public class IssueService {
      * @param command  原始輸入資料
      * @param response 外部 API 回應
      */
-    private void persistIssueRecord(String vcUid, String dataTag, String issuanceDate, String expiredDate, String transactionId) {
+    private void persistIssueRecord(String vcUid,
+                                    String dataTag,
+                                    String issuanceDate,
+                                    String expiredDate,
+                                    String transactionId,
+                                    String applicant,
+                                    String cid) {
         VcIssueRecord record = new VcIssueRecord();
         record.setTransactionId(transactionId);
         record.setVcUid(vcUid);
@@ -171,6 +194,12 @@ public class IssueService {
         }
         record.setIssuanceDate(issuanceDate);
         record.setExpiredDate(expiredDate);
+        if (StringUtils.hasText(applicant)) {
+            record.setApplicant(applicant);
+        }
+        if (StringUtils.hasText(cid)) {
+            record.setCid(cid);
+        }
         record.setCreatedAt(LocalDateTime.now());
         vcIssueRecordRepository.save(record);
     }
@@ -182,5 +211,74 @@ public class IssueService {
             LOGGER.warn("DWVC-101 請求內容序列化失敗", ex);
             return "序列化失敗：" + ex.getMessage();
         }
+    }
+
+    private String resolveCredentialJwt(String transactionId, String credentialFromIssue) {
+        if (StringUtils.hasText(credentialFromIssue)) {
+            return credentialFromIssue;
+        }
+        try {
+            IssuerVcQueryResponse queryResponse = issuerClient.queryByTransactionId(transactionId);
+            if (queryResponse != null && StringUtils.hasText(queryResponse.getCredential())) {
+                return queryResponse.getCredential();
+            }
+        } catch (Exception ex) {
+            LOGGER.warn("DWVC-201 查詢憑證失敗，transactionId={}，原因：{}", transactionId, ex.getMessage());
+        }
+        return null;
+    }
+
+    private String extractCidFromCredential(String credentialJwt) {
+        if (!StringUtils.hasText(credentialJwt)) {
+            return null;
+        }
+        try {
+            String[] segments = credentialJwt.split("\\.");
+            if (segments.length < 2) {
+                return null;
+            }
+            String payloadJson = new String(Base64.getUrlDecoder().decode(segments[1]));
+            var node = OBJECT_MAPPER.readTree(payloadJson);
+            if (node.has("jti")) {
+                String jti = node.get("jti").asText();
+                int index = jti.lastIndexOf('/');
+                if (index >= 0 && index + 1 < jti.length()) {
+                    return jti.substring(index + 1);
+                }
+                return jti;
+            }
+        } catch (Exception ex) {
+            LOGGER.warn("解析憑證 JWT 取得 CID 失敗：{}", ex.getMessage());
+        }
+        return null;
+    }
+
+    public CredentialCidResponse pollCredentialCid(String transactionId) {
+        CredentialCidResponse response = new CredentialCidResponse(false, null);
+        Optional<VcIssueRecord> optionalRecord = vcIssueRecordRepository.findByTransactionId(transactionId);
+        if (optionalRecord.isEmpty()) {
+            throw new ExternalApiException("找不到交易序號對應的發卡紀錄");
+        }
+        VcIssueRecord record = optionalRecord.get();
+        if (StringUtils.hasText(record.getCid())) {
+            response.setReady(true);
+            response.setCid(record.getCid());
+            return response;
+        }
+        try {
+            IssuerVcQueryResponse queryResponse = issuerClient.queryByTransactionId(transactionId);
+            if (queryResponse != null && StringUtils.hasText(queryResponse.getCredential())) {
+                String cid = extractCidFromCredential(queryResponse.getCredential());
+                if (StringUtils.hasText(cid)) {
+                    record.setCid(cid);
+                    vcIssueRecordRepository.save(record);
+                    response.setReady(true);
+                    response.setCid(cid);
+                }
+            }
+        } catch (CredentialPendingException ex) {
+            // 使用者尚未掃描，保持等待狀態
+        }
+        return response;
     }
 }

@@ -16,6 +16,11 @@ export async function queryByTransaction(transactionId) {
   return response.data;
 }
 
+export async function pollCredentialCid(transactionId) {
+  const response = await httpClient.get(`/credentials/transaction/${transactionId}/cid`);
+  return response.data;
+}
+
 export async function queryByDataTag(dataTag, page, size) {
   const params = {};
   if (page !== undefined && page !== null) {

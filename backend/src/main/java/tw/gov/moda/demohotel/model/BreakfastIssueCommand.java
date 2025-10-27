@@ -27,6 +27,10 @@ public class BreakfastIssueCommand {
 
     private String dataTag;
 
+    @NotBlank(message = "申請人不可為空白")
+    @Size(max = 64, message = "申請人名稱長度超過限制")
+    private String applicant;
+
     public String getVcUid() {
         return vcUid;
     }
@@ -73,5 +77,13 @@ public class BreakfastIssueCommand {
 
     public void setDataTag(String dataTag) {
         this.dataTag = dataTag;
+    }
+
+    public String getApplicant() {
+        return applicant;
+    }
+
+    public void setApplicant(String applicant) {
+        this.applicant = applicant;
     }
 }

@@ -31,7 +31,7 @@ wallet:
 
 security:
   qr:
-    ecc-public-key: ${QR_ECC_PUBLIC_KEY:} # 繁體中文註解：ECC 公鑰，供外部系統加密資料使用。
-    ecc-private-key: ${QR_ECC_PRIVATE_KEY:} # 繁體中文註解：ECC 私鑰，後端使用此金鑰解密 QR Code。
-    hmac-key: ${QR_HMAC_KEY:} # 繁體中文註解：HMAC 驗證金鑰，請填入 Base64 字串。
-    totp-key: ${QR_TOTP_KEY:} # 繁體中文註解：TOTP 驗證金鑰，請填入 Base64 字串。
+    ecc-public-key: ${QR_ECC_PUBLIC_KEY:MCowBQYDK2VuAyEAxX4zM8VNGCvWUvve/Rm0w9v0b0YB4c7pUnCyZDsXPCs=} # 繁體中文註解：ECC 公鑰，供外部系統加密資料使用。
+    ecc-private-key: ${QR_ECC_PRIVATE_KEY:MC4CAQAwBQYDK2VuBCIEIAzuZRmTJAyGSyZQr0o2GVf07g9kTfLpXPRk5Ht3XEEo} # 繁體中文註解：ECC 私鑰，後端使用此金鑰解密 QR Code。
+    hmac-key: ${QR_HMAC_KEY:AQXfsJMal9/DAle+4AxMo0La6wDLBmdFjjR1JFsUT6w=} # 繁體中文註解：HMAC 驗證金鑰，請填入 Base64 字串。
+    totp-key: ${QR_TOTP_KEY:mQTBXsBjZmX8FYY2ENFQxwNmutmS/nYNAg2BgOIYcCA=} # 繁體中文註解：TOTP 驗證金鑰，請填入 Base64 字串。

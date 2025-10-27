@@ -13,66 +13,16 @@
           <textarea
             id="encryptedData"
             v-model="form.encryptedData"
-            rows="6"
+            class="encrypted-input"
             placeholder="請貼上加密資料，例如：{&quot;d&quot;:&quot;...&quot;,&quot;h&quot;:&quot;...&quot;}"
             required
           ></textarea>
           <p class="helper-text">支援 d/h 結構與純 Base64 內容，系統會自動判斷格式。</p>
         </div>
 
-        <div class="form-field form-field--full">
-          <label class="checkbox">
-            <input type="checkbox" v-model="useCustomKeys" />
-            <span>使用自訂金鑰</span>
-          </label>
-          <p class="helper-text">未勾選時將使用 application.yml 中預設的金鑰設定。</p>
-        </div>
-
-        <div v-if="useCustomKeys" class="form-field form-field--full key-grid">
-          <div class="form-field form-field--full">
-            <label for="eccPrivateKey">ECC 私鑰</label>
-            <textarea
-              id="eccPrivateKey"
-              v-model="form.eccPrivateKey"
-              rows="3"
-              placeholder="-----BEGIN PRIVATE KEY-----"
-            ></textarea>
-          </div>
-          <div class="form-field form-field--full">
-            <label for="eccPublicKey">ECC 公鑰（選填）</label>
-            <textarea
-              id="eccPublicKey"
-              v-model="form.eccPublicKey"
-              rows="3"
-              placeholder="-----BEGIN PUBLIC KEY-----"
-            ></textarea>
-          </div>
-          <div class="form-field">
-            <label for="hmacKey">HMAC 金鑰</label>
-            <textarea
-              id="hmacKey"
-              v-model="form.hmacKey"
-              rows="2"
-              placeholder="Base64 金鑰"
-            ></textarea>
-          </div>
-          <div class="form-field">
-            <label for="totpKey">TOTP 金鑰</label>
-            <textarea
-              id="totpKey"
-              v-model="form.totpKey"
-              rows="2"
-              placeholder="Base64 金鑰"
-            ></textarea>
-          </div>
-        </div>
-
         <div class="form-actions">
           <button class="button" type="submit" :disabled="loading">
             {{ loading ? '解析中...' : '開始解析' }}
-          </button>
-          <button class="button button--ghost" type="button" @click="handleReset" :disabled="loading">
-            清除
           </button>
         </div>
       </form>
@@ -117,13 +67,8 @@ export default {
   data() {
     return {
       form: {
-        encryptedData: '',
-        eccPublicKey: '',
-        eccPrivateKey: '',
-        hmacKey: '',
-        totpKey: ''
+        encryptedData: ''
       },
-      useCustomKeys: false,
       loading: false,
       result: null,
       error: null
@@ -145,21 +90,6 @@ export default {
         encryptedData: this.form.encryptedData.trim()
       };
 
-      if (this.useCustomKeys) {
-        if (this.form.eccPublicKey.trim()) {
-          payload.eccPublicKey = this.form.eccPublicKey.trim();
-        }
-        if (this.form.eccPrivateKey.trim()) {
-          payload.eccPrivateKey = this.form.eccPrivateKey.trim();
-        }
-        if (this.form.hmacKey.trim()) {
-          payload.hmacKey = this.form.hmacKey.trim();
-        }
-        if (this.form.totpKey.trim()) {
-          payload.totpKey = this.form.totpKey.trim();
-        }
-      }
-
       try {
         const response = await decodeQrCode(payload);
         this.result = response.data;
@@ -174,11 +104,6 @@ export default {
     },
     handleReset() {
       this.form.encryptedData = '';
-      this.form.eccPublicKey = '';
-      this.form.eccPrivateKey = '';
-      this.form.hmacKey = '';
-      this.form.totpKey = '';
-      this.useCustomKeys = false;
       this.result = null;
       this.error = null;
     },
@@ -219,6 +144,14 @@ export default {
 
 textarea {
   min-height: 120px;
+}
+
+.encrypted-input {
+  height: 220px;
+  resize: none;
+  font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .result-block {

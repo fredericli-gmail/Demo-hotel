@@ -105,6 +105,10 @@
           <label for="checkOutDate">退房日期</label>
           <input id="checkOutDate" type="date" v-model="form.checkOutDate" @change="handleCheckOutChange" required />
         </div>
+        <div class="form-field">
+          <label for="applicant">申請人</label>
+          <input id="applicant" v-model="form.applicant" required />
+        </div>
         <div class="form-field form-field--full">
           <label for="dataTag">資料標籤</label>
           <input id="dataTag" v-model="form.dataTag" placeholder="可自訂批次或用途，選填" />
@@ -126,7 +130,7 @@
 </template>
 
 <script>
-import { issueCredential } from '../services/credentialService';
+import { issueCredential, pollCredentialCid } from '../services/credentialService';
 import { createDriverLicenseVerification, getDriverLicenseVerificationResult } from '../services/driverLicenseVerificationService';
 import QrModal from '../components/qr-modal.vue';
 
@@ -144,7 +148,8 @@ export default {
         roomMemo: '',
         checkInDate: '',
         checkOutDate: '',
-        dataTag: ''
+        dataTag: '',
+        applicant: ''
       },
       loading: false,
       result: null,
@@ -162,7 +167,9 @@ export default {
         verified: false,
         timerId: null,
         pollingId: null
-      }
+      },
+      pendingTransactionId: null,
+      credentialPollingId: null
     };
   },
   computed: {
@@ -188,6 +195,7 @@ export default {
   },
   beforeUnmount() {
     this.clearDriverVerificationTimers(true);
+    this.clearCredentialPolling();
   },
   methods: {
     formatDateForInput(date) {
@@ -311,7 +319,9 @@ export default {
         const response = await getDriverLicenseVerificationResult(this.driverVerification.transactionId);
         this.driverVerification.status = response.status || 'WAITING';
         this.driverVerification.message = response.message || this.driverVerification.message;
-        this.driverVerification.claims = response.claims || [];
+        const claims = response.claims || [];
+        this.driverVerification.claims = claims;
+        this.applyVerificationApplicant(claims);
         this.driverVerification.verified = !!response.verified;
 
         if (this.driverVerification.verified || this.driverVerification.status === 'FAILED') {
@@ -321,9 +331,47 @@ export default {
         console.error('查詢駕照驗證結果失敗', error);
       }
     },
+    applyVerificationApplicant(claims) {
+      if (!Array.isArray(claims)) {
+        return;
+      }
+      const nameClaim = claims.find((item) => item && item.ename === 'name' && item.value);
+      if (nameClaim && (!this.form.applicant || this.form.applicant.trim().length === 0)) {
+        this.form.applicant = nameClaim.value;
+      }
+    },
     openAuthUri() {
       if (this.driverVerification.authUri) {
         window.open(this.driverVerification.authUri, '_blank');
+      }
+    },
+    startCredentialPolling() {
+      this.clearCredentialPolling();
+      if (!this.pendingTransactionId) {
+        return;
+      }
+      this.credentialPollingId = window.setInterval(this.fetchCredentialCid, DRIVER_VERIFICATION_POLL_INTERVAL);
+    },
+    async fetchCredentialCid() {
+      if (!this.pendingTransactionId) {
+        return;
+      }
+      try {
+        const response = await pollCredentialCid(this.pendingTransactionId);
+        if (response && response.ready && response.cid) {
+          this.clearCredentialPolling();
+          this.result = null;
+          this.showResultModal = false;
+          window.alert(`電子房卡已發行成功，CID：${response.cid}`);
+        }
+      } catch (error) {
+        console.error('查詢憑證 CID 失敗', error);
+      }
+    },
+    clearCredentialPolling() {
+      if (this.credentialPollingId) {
+        window.clearInterval(this.credentialPollingId);
+        this.credentialPollingId = null;
       }
     },
     async handleSubmit() {
@@ -339,7 +387,8 @@ export default {
           roomMemo: this.normalizeOptional(this.form.roomMemo),
           checkInDate: this.formatDateForPayload(this.form.checkInDate),
           checkOutDate: this.formatDateForPayload(this.form.checkOutDate),
-          dataTag: this.normalizeOptional(this.form.dataTag)
+          dataTag: this.normalizeOptional(this.form.dataTag),
+          applicant: this.form.applicant.trim()
         };
         if (!payload.roomType) {
           delete payload.roomType;
@@ -351,8 +400,16 @@ export default {
           delete payload.dataTag;
         }
         const response = await issueCredential(payload);
-        this.result = response;
-        this.showResultModal = true;
+        this.pendingTransactionId = response.transactionId || null;
+        if (response && response.cid) {
+          this.result = null;
+          this.showResultModal = false;
+          window.alert(`電子房卡已發行成功，CID：${response.cid}`);
+        } else {
+          this.result = response;
+          this.showResultModal = true;
+          this.startCredentialPolling();
+        }
       } catch (error) {
         window.alert(error.message);
       } finally {
@@ -361,6 +418,7 @@ export default {
     },
     handleModalClose() {
       this.showResultModal = false;
+      this.clearCredentialPolling();
     }
   }
 };
