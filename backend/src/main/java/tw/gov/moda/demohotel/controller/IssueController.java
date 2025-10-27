@@ -20,6 +20,7 @@ import tw.gov.moda.demohotel.client.dto.IssuerVcByDataTagResponse;
 import tw.gov.moda.demohotel.client.dto.IssuerVcQueryResponse;
 import tw.gov.moda.demohotel.model.BreakfastIssueCommand;
 import tw.gov.moda.demohotel.model.IssueCommand;
+import tw.gov.moda.demohotel.dto.CredentialRevokeLookupResponse;
 import tw.gov.moda.demohotel.dto.CredentialRevokeRequest;
 import tw.gov.moda.demohotel.dto.CredentialCidResponse;
 import tw.gov.moda.demohotel.service.CredentialLifecycleService;
@@ -129,6 +130,15 @@ public class IssueController {
     public ResponseEntity<IssuerCredentialStatusChangeResponse> changeStatus(@PathVariable("cid") String cid,
                                                                              @PathVariable("action") String action) {
         IssuerCredentialStatusChangeResponse response = credentialLifecycleService.changeStatus(cid, action);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 繁體中文註解：撤銷前先查詢是否存在對應憑證與 CID。
+     */
+    @PostMapping("/revoke/lookup")
+    public ResponseEntity<CredentialRevokeLookupResponse> revokeLookup(@Valid @RequestBody CredentialRevokeRequest request) {
+        CredentialRevokeLookupResponse response = issueService.lookupCredentialForRevoke(request);
         return ResponseEntity.ok(response);
     }
 

@@ -43,6 +43,7 @@
             <li><strong>房間號碼：</strong>{{ revokeCandidate.roomNb }}</li>
             <li><strong>票券類別：</strong>{{ revokeCandidate.ticketType || '－' }}</li>
             <li><strong>餐廳位置：</strong>{{ revokeCandidate.location || '－' }}</li>
+            <li><strong>憑證 CID：</strong>{{ revokeCandidate.cid || '尚未取得' }}</li>
           </ul>
           <div class="revoke-actions">
             <button class="button button--danger" type="button" :disabled="revoking" @click="handleRevoke">
@@ -75,7 +76,7 @@
 
 <script>
 import { decodeQrCode } from '../services/reverseQrService';
-import { revokeCredential } from '../services/credentialService';
+import { revokeCredential, lookupCredentialForRevoke } from '../services/credentialService';
 
 export default {
   name: 'ReverseQrcodePage',
@@ -119,7 +120,9 @@ export default {
           this.error = this.result.message;
         }
         this.revokeCandidate = this.result.success ? this.extractRevokeCandidate(this.originalMeta, this.result.data) : null;
-        if (!this.revokeCandidate && this.originalMeta && this.originalMeta?.t === 'hlbft') {
+        if (this.revokeCandidate) {
+          await this.fetchRevokeCid();
+        } else if (this.originalMeta && this.originalMeta?.t === 'hlbft') {
           this.revokeMessage = '未找到符合條件的早餐券發卡紀錄或尚未取得 CID。';
         }
       } catch (err) {
@@ -185,7 +188,8 @@ export default {
         vcUid,
         roomNb,
         ticketType: ticketType || '',
-        location: location || ''
+        location: location || '',
+        cid: null
       };
     },
     resolveVcRoot(data) {
@@ -220,6 +224,24 @@ export default {
       }
       return {};
     },
+    async fetchRevokeCid() {
+      if (!this.revokeCandidate) {
+        return;
+      }
+      try {
+        const response = await lookupCredentialForRevoke(this.revokeCandidate);
+        if (response && response.found && response.cid) {
+          this.revokeCandidate.cid = response.cid;
+          this.revokeMessage = `已找到 CID：${response.cid}`;
+        } else {
+          this.revokeCandidate.cid = null;
+          this.revokeMessage = response?.message || '未找到符合條件的發卡紀錄或尚未取得 CID。';
+        }
+      } catch (error) {
+        this.revokeCandidate.cid = null;
+        this.revokeMessage = error.message || '查詢 CID 失敗，請稍後再試。';
+      }
+    },
     resolveVcUid(vcRoot, fallbackType) {
       if (!vcRoot) {
         return fallbackType;
@@ -240,6 +262,10 @@ export default {
     },
     async handleRevoke() {
       if (!this.revokeCandidate) {
+        return;
+      }
+      if (!this.revokeCandidate.cid) {
+        this.revokeMessage = '尚未查得 CID，無法撤銷。';
         return;
       }
       this.revoking = true;

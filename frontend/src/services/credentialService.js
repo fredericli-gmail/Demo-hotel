@@ -21,6 +21,11 @@ export async function pollCredentialCid(transactionId) {
   return response.data;
 }
 
+export async function lookupCredentialForRevoke(payload) {
+  const response = await httpClient.post('/credentials/revoke/lookup', payload);
+  return response.data;
+}
+
 export async function revokeCredential(payload) {
   const response = await httpClient.post('/credentials/revoke', payload);
   return response.data;

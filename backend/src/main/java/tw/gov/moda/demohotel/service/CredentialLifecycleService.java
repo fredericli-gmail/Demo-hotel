@@ -35,8 +35,12 @@ public class CredentialLifecycleService {
      */
     @Transactional
     public IssuerCredentialStatusChangeResponse changeStatus(String cid, String action) {
+        return changeStatus(cid, action, null);
+    }
+
+    public IssuerCredentialStatusChangeResponse changeStatus(String cid, String action, String vcUid) {
         IssuerCredentialStatusChangeResponse response = issuerClient.changeCredentialStatus(cid, action);
-        syncCredentialStatus(cid, response.getCredentialStatus());
+        syncCredentialStatus(cid, response.getCredentialStatus(), vcUid);
         return response;
     }
 
@@ -63,7 +67,7 @@ public class CredentialLifecycleService {
      * @param cid    卡片識別碼
      * @param status 最新狀態
      */
-    private void syncCredentialStatus(String cid, String status) {
+    private void syncCredentialStatus(String cid, String status, String vcUid) {
         if (cid == null || cid.trim().length() == 0) {
             return;
         }
@@ -77,6 +81,9 @@ public class CredentialLifecycleService {
             credential.setCreatedAt(LocalDateTime.now());
         }
         credential.setCredentialStatus(status);
+        if (vcUid != null && vcUid.trim().length() > 0) {
+            credential.setVcUid(vcUid);
+        }
         credential.setUpdatedAt(LocalDateTime.now());
         vcCredentialRepository.save(credential);
     }
