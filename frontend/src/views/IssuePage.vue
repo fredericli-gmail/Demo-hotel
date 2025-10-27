@@ -5,6 +5,7 @@
       <header class="section-heading">
         <div>
           <h2 class="section-title">駕照驗證</h2>
+          <p class="section-subtitle">請使用 https://demo.wallet.gov.tw/getcard/ 來領取駕照電子卡。</p>
           <p class="section-subtitle">請旅客開啟數位憑證皮夾掃描 QR Code，完成身分驗證後再進行發卡。</p>
         </div>
         <div class="verification-actions">

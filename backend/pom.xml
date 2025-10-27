@@ -22,7 +22,10 @@
 
     <properties>
         <!-- 繁體中文註解：統一使用 Java 17，符合 Spring Boot 3.x 要求。 -->
-        <java.version>17</java.version>
+        <!-- 已升級至 Java 21（LTS）以符合最新長期支援版本 -->
+        <java.version>21</java.version>
+        <!-- 編譯器釋出版本（用於 maven-compiler-plugin） -->
+        <maven.compiler.release>21</maven.compiler.release>
     </properties>
 
     <dependencies>
@@ -63,6 +66,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- 繁體中文註解：開發階段使用 DevTools 監控程式變動，自動觸發重啟。 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
@@ -71,6 +82,15 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- 繁體中文註解：明確設定 maven-compiler-plugin 的 release 為 21，確保使用 Java 21 編譯語法與標準庫 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -28,3 +28,10 @@ wallet:
   driver-license-vp:
     ref: ${VERIFIER_DRIVER_LICENSE_REF:00000000_demo_drivinglicense_202504251418} # 繁體中文註解：駕照 VP 驗證服務代碼。
     vp-uid: ${VERIFIER_DRIVER_LICENSE_VPUID:demo_drivinglicense_202504251418} # 繁體中文註解：駕照 VP 模板代碼。
+
+security:
+  qr:
+    ecc-public-key: ${QR_ECC_PUBLIC_KEY:} # 繁體中文註解：ECC 公鑰，供外部系統加密資料使用。
+    ecc-private-key: ${QR_ECC_PRIVATE_KEY:} # 繁體中文註解：ECC 私鑰，後端使用此金鑰解密 QR Code。
+    hmac-key: ${QR_HMAC_KEY:} # 繁體中文註解：HMAC 驗證金鑰，請填入 Base64 字串。
+    totp-key: ${QR_TOTP_KEY:} # 繁體中文註解：TOTP 驗證金鑰，請填入 Base64 字串。

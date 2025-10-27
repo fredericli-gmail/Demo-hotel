@@ -13,6 +13,7 @@
           <RouterLink to="/inquiry">發卡查詢</RouterLink>
           <RouterLink to="/lifecycle">卡片管理</RouterLink>
           <RouterLink to="/verification">驗證工具</RouterLink>
+          <RouterLink to="/reverse-qrcode">QR Code 解析</RouterLink>
         </nav>
       </div>
     </header>

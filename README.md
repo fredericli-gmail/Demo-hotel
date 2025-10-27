@@ -26,6 +26,7 @@
 - 發卡查詢 `/inquiry`：依交易序號或標籤查詢 VC。
 - 卡片管理 `/lifecycle`：執行停止、啟用等狀態調整。
 - 驗證工具 `/verification`：整合驗證端 API 供前台快速檢視。
+- QR Code 解析 `/reverse-qrcode`：貼上加密 QR Code 字串，後端會進行 ECC 解密、HMAC 與 TOTP 驗證後回傳原始資料。
 
 ## Docker Compose 快速啟動
 1. 編輯 `docker-compose.yml`，將 `WALLET_ISSUER_ACCESS_TOKEN` 與 `WALLET_VERIFIER_ACCESS_TOKEN` 改為實際取得的值。
@@ -45,3 +46,4 @@
 - 禁用 Lombok 與 Java Lambda，程式碼以傳統寫法維持可讀性。
 - 文件與註解一律採臺灣繁體中文，並保持語氣專業。
 - 更多代辦與限制請參考 `docs/codex-reminders.md`。
+- 金鑰設定與解析流程說明請見 `docs/qr-code-decoder.md`。
