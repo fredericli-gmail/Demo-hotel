@@ -1,0 +1,32 @@
+# 繁體中文註解：正式環境設定檔，改用預先建好的映像並掛載實體磁碟。
+services:
+  db:
+    volumes:
+      - type: bind
+        source: ${DB_DATA_PATH:-./prod-db-data}
+        target: /var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build: null
+    image: ${BACKEND_IMAGE:-demo-hotel-backend:prod}
+    volumes: []
+    environment:
+      DB_URL: ${DB_URL:-jdbc:postgresql://db:5432/demohotel}
+      DB_USERNAME: ${DB_USERNAME:-demohotel}
+      DB_PASSWORD: ${DB_PASSWORD:-demohotel}
+      WALLET_ISSUER_ACCESS_TOKEN: ${WALLET_ISSUER_ACCESS_TOKEN:-請於.env設定發卡權杖}
+      WALLET_VERIFIER_ACCESS_TOKEN: ${WALLET_VERIFIER_ACCESS_TOKEN:-請於.env設定驗證權杖}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  frontend:
+    build: null
+    image: ${FRONTEND_IMAGE:-demo-hotel-frontend:prod}
+    volumes: []
+    environment:
+      VITE_BACKEND_ORIGIN: ${VITE_BACKEND_ORIGIN:-http://backend:8080}
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    restart: unless-stopped
