@@ -1,6 +1,8 @@
 # 繁體中文註解：全域環境設定，以 YAML 方式集中管理。
 server:
   port: 8080 # 繁體中文註解：預設監聽埠，可依環境調整。
+  servlet:
+    context-path: /demohotel # 繁體中文註解：設定統一的 Context Root，前端與反向代理需同步調整。
 
 spring:
   application:

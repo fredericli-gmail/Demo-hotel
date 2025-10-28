@@ -1,8 +1,10 @@
 // 繁體中文註解：建立 axios 實例並統一設定 Access Token 與錯誤處理。
 import axios from 'axios';
 
+const baseURL = `${import.meta.env.BASE_URL}api`;
+
 const httpClient = axios.create({
-  baseURL: '/api',
+  baseURL,
   timeout: 15000
 });
 
