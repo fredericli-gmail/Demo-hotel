@@ -15,10 +15,10 @@ services:
       DB_URL: ${DB_URL:-jdbc:postgresql://db:5432/demohotel}
       DB_USERNAME: ${DB_USERNAME:-demohotel}
       DB_PASSWORD: ${DB_PASSWORD:-demohotel}
-      WALLET_ISSUER_ACCESS_TOKEN: ${WALLET_ISSUER_ACCESS_TOKEN:-請於.env設定發卡權杖}
-      WALLET_VERIFIER_ACCESS_TOKEN: ${WALLET_VERIFIER_ACCESS_TOKEN:-請於.env設定驗證權杖}
-    ports:
-      - "${BACKEND_PORT:-8080}:8080"
+      WALLET_ISSUER_ACCESS_TOKEN: ${WALLET_ISSUER_ACCESS_TOKEN:-iZpu42gbRAyAWuGGHGBXlE7KSVWPEhz5}
+      WALLET_VERIFIER_ACCESS_TOKEN: ${WALLET_VERIFIER_ACCESS_TOKEN:-duCrxCUexuxUJtg4OPKdIWlK7iLhKicy}
+    #ports:
+    #  - "${BACKEND_PORT:-8080}:8080"
     restart: unless-stopped
 
   frontend:

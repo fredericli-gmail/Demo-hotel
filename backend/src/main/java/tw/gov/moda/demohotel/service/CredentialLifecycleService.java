@@ -55,7 +55,7 @@ public class CredentialLifecycleService {
         IssuerMultiStatusChangeResponse response = issuerClient.changeMultipleCredentials(request);
         if (response != null && response.getSuccess() != null) {
             for (String cid : response.getSuccess()) {
-                syncCredentialStatus(cid, response.getAction());
+                syncCredentialStatus(cid, response.getAction(), null);
             }
         }
         return response;

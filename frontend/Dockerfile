@@ -2,7 +2,13 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install
+ARG TARGETARCH
+RUN npm install && \
+    case "$TARGETARCH" in \
+      amd64) npm install @rollup/rollup-linux-x64-musl --no-save ;; \
+      arm64) npm install @rollup/rollup-linux-arm64-musl --no-save ;; \
+      *) echo "不支援的建置架構：$TARGETARCH" && exit 1 ;; \
+    esac
 COPY . .
 
 # 繁體中文註解：開發階段直接啟動 Vite Dev Server，支援容器內熱重載。
