@@ -10,10 +10,10 @@
         <nav class="layout__nav">
           <RouterLink to="/issue">發卡作業</RouterLink>
           <RouterLink to="/tickets/breakfast">早餐券發放</RouterLink>
-          <RouterLink to="/inquiry">發卡查詢</RouterLink>
+          <!-- <RouterLink to="/inquiry">發卡查詢</RouterLink>
           <RouterLink to="/lifecycle">卡片管理</RouterLink>
-          <RouterLink to="/verification">驗證工具</RouterLink>
-          <RouterLink to="/reverse-qrcode">QR Code 解析</RouterLink>
+          <RouterLink to="/verification">驗證工具</RouterLink> -->
+          <RouterLink to="/reverse-qrcode">驗證房卡/票券</RouterLink>
         </nav>
       </div>
     </header>
