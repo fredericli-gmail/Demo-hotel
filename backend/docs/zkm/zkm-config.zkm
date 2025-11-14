@@ -1,0 +1,379 @@
+/*****************************************************************************/
+/* Demo Hotel Backend - Zelix KlassMaster 腳本                               */
+/* 此腳本預期於 backend/target 下執行，請先完成 mvn package 產生可執行 JAR。   */
+/* 若版本號異動，請同步更新輸入與輸出檔名。                                  */
+/*****************************************************************************/
+
+// ----------------------------------------------------------------------------
+// Spring Framework 會以反射偵測 Kotlin 類別，某些 class 會延伸 kotlin.jvm.internal.Lambda。
+// 將 Kotlin 標準庫、Gson（TypeToken）、Log4j Core（PatternConverter）與 Jetty Servlet Handler 加到 classpath，若仍有零星遺失再忽略。
+// ----------------------------------------------------------------------------
+classpath "../docs/zkm/lib/kotlin-stdlib-1.9.25.jar"
+          "../docs/zkm/lib/gson-2.11.0.jar"
+          "../docs/zkm/lib/log4j-core-2.21.1.jar"
+          "../docs/zkm/lib/log4j-jul-2.21.1.jar"
+          "../docs/zkm/lib/jetty-ee10-servlet-12.0.7.jar"
+          "../docs/zkm/lib/jetty-server-12.0.7.jar"
+          "../docs/zkm/lib/jetty-io-12.0.7.jar"
+          "../docs/zkm/lib/jetty-client-12.0.7.jar"
+          "../docs/zkm/lib/jetty-reactive-httpclient-4.0.7.jar"
+          "../docs/zkm/lib/jetty-http2-server-12.0.7.jar"
+          "../docs/zkm/lib/jetty-http2-common-12.0.7.jar"
+          "../docs/zkm/lib/jetty-http2-hpack-12.0.7.jar"
+          "../docs/zkm/lib/jetty-http-12.0.7.jar"
+          "../docs/zkm/lib/jetty-session-12.0.7.jar"
+          "../docs/zkm/lib/jetty-alpn-server-12.0.7.jar"
+          "../docs/zkm/lib/netty-buffer-4.1.108.Final.jar"
+          "../docs/zkm/lib/netty-codec-http-4.1.108.Final.jar"
+          "../docs/zkm/lib/netty-codec-4.1.108.Final.jar"
+          "../docs/zkm/lib/netty-common-4.1.108.Final.jar"
+          "../docs/zkm/lib/netty-handler-4.1.108.Final.jar"
+          "../docs/zkm/lib/netty-transport-4.1.108.Final.jar"
+          "../docs/zkm/lib/netty-transport-native-unix-common-4.1.108.Final.jar"
+          "../docs/zkm/lib/netty-resolver-4.1.108.Final.jar"
+          "../docs/zkm/lib/mutiny-1.7.0.jar"
+          "../docs/zkm/lib/smallrye-common-annotation-1.13.0.jar"
+          "../docs/zkm/lib/rxjava-3.1.8.jar"
+          "../docs/zkm/lib/blockhound-1.0.9.RELEASE.jar"
+          "../docs/zkm/lib/netty5-buffer-5.0.0.Alpha4.jar"
+          "../docs/zkm/lib/netty5-common-5.0.0.Alpha4.jar"
+          "../docs/zkm/lib/netty5-codec-5.0.0.Alpha4.jar"
+          "../docs/zkm/lib/netty5-handler-5.0.0.Alpha4.jar"
+          "../docs/zkm/lib/netty5-codec-http-5.0.0.Alpha4.jar"
+          "../docs/zkm/lib/netty5-transport-5.0.0.Alpha4.jar"
+          "../docs/zkm/lib/netty5-buffer-stub.jar"
+          "../docs/zkm/lib/jopt-simple-5.0.4.jar"
+          "../docs/zkm/lib/jetty-util-12.0.7.jar"
+          "../docs/zkm/lib/httpclient-4.5.14.jar"
+          "../docs/zkm/lib/httpcore-4.4.16.jar"
+          "../docs/zkm/lib/httpasyncclient-4.1.5.jar"
+          "../docs/zkm/lib/httpcore-nio-4.4.15.jar"
+          "../docs/zkm/lib/reactor-core-3.6.6.jar"
+          "../docs/zkm/lib/aspectjweaver-1.9.22.jar"
+          "../docs/zkm/lib/janino-3.1.12.jar"
+          "../docs/zkm/lib/commons-compiler-3.1.12.jar"
+          "../docs/zkm/lib/commons-codec-1.15.jar"
+          "../docs/zkm/lib/jakarta.mail-2.0.3.jar"
+          "../docs/zkm/lib/metrics-core-4.2.10.jar"
+          "../docs/zkm/lib/metrics-healthchecks-4.2.10.jar"
+          "../docs/zkm/lib/micrometer-core-1.12.5.jar"
+          "../docs/zkm/lib/simpleclient-0.16.0.jar"
+          "../docs/zkm/lib/javassist-3.28.0-GA.jar"
+          "../docs/zkm/lib/javax.annotation-api-1.3.2.jar"
+          "../docs/zkm/lib/context-propagation-1.1.2.jar"
+          "../docs/zkm/lib/jakarta.enterprise.cdi-api-4.0.1.jar"
+          "../docs/zkm/lib/jakarta.interceptor-api-2.1.0.jar"
+          "../docs/zkm/lib/jakarta.persistence-api-3.1.0.jar"
+          "../docs/zkm/lib/spotbugs-annotations-4.7.3.jar"
+          "../docs/zkm/lib/jna-5.13.0.jar"
+          "../docs/zkm/lib/jakarta.ejb-api-4.0.1.jar"
+          "../docs/zkm/lib/jakarta.resource-api-2.1.0.jar"
+          "../docs/zkm/lib/jakarta.xml.ws-api-4.0.0.jar"
+          "../docs/zkm/lib/jakarta.xml.soap-api-3.0.0.jar"
+          "../docs/zkm/lib/jakarta.servlet-api-6.0.0.jar"
+          "../docs/zkm/lib/biz.aQute.bndlib-6.4.1.jar"
+          "../docs/zkm/lib/osgi.annotation-8.0.1.jar"
+          "../docs/zkm/lib/org.osgi.framework-1.8.0.jar"
+          "../docs/zkm/lib/wsdl4j-1.6.3.jar"
+          "../docs/zkm/lib/FastInfoset-2.1.0.jar"
+          "../docs/zkm/lib/stax-ex-2.1.0.jar"
+          "../docs/zkm/lib/jboss-logging-annotations-2.2.1.Final.jar"
+          "../docs/zkm/lib/jackson-dataformat-xml-2.15.3.jar"
+          "../docs/zkm/lib/aalto-xml-1.3.1.jar"
+          "../docs/zkm/lib/stax2-api-4.2.1.jar"
+          "../docs/zkm/lib/jackson-dataformat-cbor-2.15.3.jar"
+          "../docs/zkm/lib/jackson-dataformat-smile-2.15.3.jar"
+          "../docs/zkm/lib/jakarta.json.bind-api-3.0.0.jar"
+          "../docs/zkm/lib/jakarta.json-api-2.1.3.jar"
+          "../docs/zkm/lib/money-api-1.1.jar"
+          "../docs/zkm/lib/joda-time-2.12.7.jar"
+          "../docs/zkm/lib/javafx-base-21-mac-aarch64.jar"
+          "../docs/zkm/lib/paranamer-2.8.jar"
+          "../docs/zkm/lib/ant-1.10.14.jar"
+          "../docs/zkm/lib/jboss-logmanager-3.0.2.Final.jar"
+          "../docs/zkm/lib/log4j-1.2.17.jar"
+          "../docs/zkm/lib/jna-platform-5.13.0.jar"
+          "../docs/zkm/lib/waffle-jna-1.9.1.jar"
+          "../docs/zkm/lib/kotlinx-coroutines-reactive-1.7.3.jar"
+          "../docs/zkm/lib/kotlinx-coroutines-reactor-1.7.3.jar"
+          "../docs/zkm/lib/kotlinx-coroutines-core-1.7.3.jar"
+          "../docs/zkm/lib/kotlinx-coroutines-core-jvm-1.7.3.jar"
+          "../docs/zkm/lib/kotlinx-serialization-core-jvm-1.6.3.jar"
+          "../docs/zkm/lib/kotlinx-serialization-cbor-jvm-1.6.3.jar"
+          "../docs/zkm/lib/kotlinx-serialization-json-jvm-1.6.3.jar"
+          "../docs/zkm/lib/kotlinx-serialization-protobuf-jvm-1.6.3.jar"
+          "../docs/zkm/lib/protobuf-java-util-3.25.2.jar"
+          "../docs/zkm/lib/scala-library-2.13.12.jar"
+          "../docs/zkm/lib/commons-pool2-2.12.0.jar"
+          "../docs/zkm/lib/annotations-24.1.0.jar"
+          "../docs/zkm/lib/guava-32.1.3-jre.jar"
+          "../docs/zkm/lib/svm-23.1.3.jar"
+          "../docs/zkm/lib/field-value-transformer-stub.jar"
+          "../docs/zkm/lib/groovy-3.0.21.jar"
+          "../docs/zkm/lib/groovy-xml-3.0.21.jar"
+          "../docs/zkm/lib/groovy-templates-3.0.21.jar"
+          "../docs/zkm/lib/reactive-streams-1.0.4.jar"
+          "../docs/zkm/lib/crac-1.4.0.jar"
+          "../docs/zkm/lib/spring-rabbit-3.1.4.jar"
+          "../docs/zkm/lib/amqp-client-5.21.0.jar"
+          "../docs/zkm/lib/spring-messaging-6.1.6.jar"
+          "../docs/zkm/lib/spring-rabbit-stream-3.1.4.jar"
+          "../docs/zkm/lib/stream-client-0.14.0.jar"
+          "../docs/zkm/lib/spring-retry-2.0.5.jar"
+          "../docs/zkm/lib/spring-batch-core-5.1.1.jar"
+          "../docs/zkm/lib/cache2k-spring-2.6.1.Final.jar"
+          "../docs/zkm/lib/cache2k-core-2.6.1.Final.jar"
+          "../docs/zkm/lib/cache2k-api-2.6.1.Final.jar"
+          "../docs/zkm/lib/caffeine-3.1.8.jar"
+          "../docs/zkm/lib/commons-dbcp2-2.12.0.jar"
+          "../docs/zkm/lib/spring-context-support-6.1.6.jar"
+          "../docs/zkm/lib/spring-data-couchbase-5.2.4.jar"
+          "../docs/zkm/lib/java-client-3.5.0.jar"
+          "../docs/zkm/lib/hazelcast-5.3.6.jar"
+          "../docs/zkm/lib/hazelcast-spring-5.3.6.jar"
+          "../docs/zkm/lib/infinispan-spring5-embedded-14.0.10.Final.jar"
+          "../docs/zkm/lib/infinispan-core-14.0.10.Final.jar"
+          "../docs/zkm/lib/cache-api-1.1.1.jar"
+          "../docs/zkm/lib/spring-data-redis-3.2.4.jar"
+          "../docs/zkm/lib/lettuce-core-6.3.2.RELEASE.jar"
+          "../docs/zkm/lib/jedis-5.0.2.jar"
+          "../docs/zkm/lib/java-driver-core-4.17.0.jar"
+          "../docs/zkm/lib/config-1.4.3.jar"
+          "../docs/zkm/lib/core-io-2.5.0.jar"
+          "../docs/zkm/lib/derby-10.17.1.0.jar"
+          "../docs/zkm/lib/derbytools-10.17.1.0.jar"
+          "../docs/zkm/lib/h2-2.2.224.jar"
+          "../docs/zkm/lib/influxdb-java-2.23.jar"
+          "../docs/zkm/lib/okhttp-4.12.0.jar"
+          "../docs/zkm/lib/okio-jvm-3.6.0.jar"
+          "../docs/zkm/lib/bson-4.11.1.jar"
+          "../docs/zkm/lib/bson-record-codec-4.11.1.jar"
+          "../docs/zkm/lib/mongodb-driver-core-4.11.1.jar"
+          "../docs/zkm/lib/mongodb-driver-sync-4.11.1.jar"
+          "../docs/zkm/lib/mongodb-driver-reactivestreams-4.11.1.jar"
+          "../docs/zkm/lib/spring-data-cassandra-4.2.4.jar"
+          "../docs/zkm/lib/spring-data-elasticsearch-5.2.4.jar"
+          "../docs/zkm/lib/spring-data-envers-3.2.4.jar"
+          "../docs/zkm/lib/spring-data-jdbc-3.2.4.jar"
+          "../docs/zkm/lib/spring-data-keyvalue-3.2.4.jar"
+          "../docs/zkm/lib/spring-data-ldap-3.2.4.jar"
+          "../docs/zkm/lib/spring-ldap-core-3.2.3.jar"
+          "../docs/zkm/lib/unboundid-ldapsdk-6.0.10.jar"
+          "../docs/zkm/lib/spring-data-mongodb-4.2.4.jar"
+          "../docs/zkm/lib/spring-data-neo4j-7.1.4.jar"
+          "../docs/zkm/lib/spring-data-relational-3.2.4.jar"
+          "../docs/zkm/lib/spring-data-r2dbc-3.2.4.jar"
+          "../docs/zkm/lib/spring-data-rest-core-4.2.4.jar"
+          "../docs/zkm/lib/spring-data-rest-webmvc-4.2.4.jar"
+          "../docs/zkm/lib/jmolecules-spring-0.17.0.jar"
+          "../docs/zkm/lib/org.eclipse.persistence.core-4.0.3.jar"
+          "../docs/zkm/lib/org.eclipse.persistence.jpa-4.0.3.jar"
+          "../docs/zkm/lib/jsqlparser-4.6.jar"
+          "../docs/zkm/lib/querydsl-core-5.0.0.jar"
+          "../docs/zkm/lib/querydsl-jpa-5.0.0-jakarta.jar"
+          "../docs/zkm/lib/vavr-0.10.4.jar"
+          "../docs/zkm/lib/eclipse-collections-api-11.1.0.jar"
+          "../docs/zkm/lib/eclipse-collections-11.1.0.jar"
+          "../docs/zkm/lib/jooq-3.18.7.jar"
+          "../docs/zkm/lib/hibernate-core-stub.jar"
+          "../docs/zkm/lib/hibernate-core-6.4.4.Final.jar"
+          "../docs/zkm/lib/hibernate-commons-annotations-6.0.6.Final.jar"
+          "../docs/zkm/lib/hibernate-criteria-stub.jar"
+          "../docs/zkm/lib/hibernate-core-5.6.15.Final.jar"
+          "../docs/zkm/lib/javax.persistence-api-2.2.jar"
+          "../docs/zkm/lib/spring-r2dbc-6.1.5.jar"
+          "../docs/zkm/lib/r2dbc-pool-1.0.0.RELEASE.jar"
+          "../docs/zkm/lib/r2dbc-spi-1.0.0.RELEASE.jar"
+          "../docs/zkm/lib/spring-integration-core-6.2.4.jar"
+          "../docs/zkm/lib/spring-integration-jdbc-6.2.4.jar"
+          "../docs/zkm/lib/spring-integration-jmx-6.2.4.jar"
+          "../docs/zkm/lib/spring-integration-rsocket-6.2.4.jar"
+          "../docs/zkm/lib/spring-webflux-6.1.6.jar"
+          "../docs/zkm/lib/jersey-container-servlet-core-3.1.6.jar"
+          "../docs/zkm/lib/jersey-server-3.1.6.jar"
+          "../docs/zkm/lib/jersey-common-3.1.6.jar"
+          "../docs/zkm/lib/jersey-spring6-3.1.6.jar"
+          "../docs/zkm/lib/jakarta.ws.rs-api-3.1.0.jar"
+          "../docs/zkm/lib/jersey-media-json-jackson-3.1.6.jar"
+          "../docs/zkm/lib/jackson-module-jakarta-xmlbind-annotations-2.17.0.jar"
+          "../docs/zkm/lib/json-path-2.8.0.jar"
+          "../docs/zkm/lib/xmlprojector-1.4.14.jar"
+          "../docs/zkm/lib/spring-graphql-1.2.6.jar"
+          "../docs/zkm/lib/spring-security-config-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-web-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-data-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-oauth2-client-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-oauth2-core-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-oauth2-resource-server-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-oauth2-jose-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-oauth2-authorization-server-1.5.1.jar"
+          "../docs/zkm/lib/nimbus-jose-jwt-9.37.3.jar"
+          "../docs/zkm/lib/spring-security-core-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-rsocket-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-messaging-6.2.4.jar"
+          "../docs/zkm/lib/spring-security-saml2-service-provider-6.2.4.jar"
+          "../docs/zkm/lib/spring-instrument-6.1.6.jar"
+          "../docs/zkm/lib/sendgrid-java-4.9.3.jar"
+          "../docs/zkm/lib/java-http-client-4.5.0.jar"
+          "../docs/zkm/lib/spring-session-hazelcast-3.2.1.jar"
+          "../docs/zkm/lib/spring-session-core-3.2.1.jar"
+          "../docs/zkm/lib/spring-session-jdbc-3.2.1.jar"
+          "../docs/zkm/lib/spring-session-data-mongodb-3.2.1.jar"
+          "../docs/zkm/lib/spring-session-data-redis-3.2.1.jar"
+          "../docs/zkm/lib/c3p0-0.9.5.4.jar"
+          "../docs/zkm/lib/thymeleaf-spring6-3.1.2.RELEASE.jar"
+          "../docs/zkm/lib/thymeleaf-3.1.2.RELEASE.jar"
+          "../docs/zkm/lib/thymeleaf-dataattribute-stub.jar"
+          "../docs/zkm/lib/thymeleaf-extras-springsecurity6-3.1.2.RELEASE.jar"
+          "../docs/zkm/lib/thymeleaf-layout-dialect-3.2.1.jar"
+          "../docs/zkm/lib/jetty-ee10-webapp-12.0.7.jar"
+          "../docs/zkm/lib/jetty-xml-12.0.7.jar"
+          "../docs/zkm/lib/jetty-websocket-stub.jar"
+          "../docs/zkm/lib/undertow-core-2.3.10.Final.jar"
+          "../docs/zkm/lib/undertow-servlet-2.3.18.Final.jar"
+          "../docs/zkm/lib/undertow-websockets-jsr-2.3.18.Final.jar"
+          "../docs/zkm/lib/wildfly-common-1.6.0.Final.jar"
+          "../docs/zkm/lib/xnio-api-3.8.9.Final.jar"
+          "../docs/zkm/lib/jboss-threads-2.3.6.Final.jar"
+          "../docs/zkm/lib/httpclient5-5.3.jar"
+          "../docs/zkm/lib/httpcore5-5.2.3.jar"
+          "../docs/zkm/lib/httpcore5-reactive-5.2.3.jar"
+          "../docs/zkm/lib/spring-ws-core-4.0.5.jar"
+          "../docs/zkm/lib/spring-xml-4.0.5.jar"
+          "../docs/zkm/lib/spring-oxm-6.1.6.jar"
+          "../docs/zkm/lib/spring-websocket-6.1.6.jar"
+          "../docs/zkm/lib/spring-jms-6.1.6.jar"
+          "../docs/zkm/lib/jakarta.jms-api-3.1.0.jar"
+          "../docs/zkm/lib/pooled-jms-1.2.5.jar"
+          "../docs/zkm/lib/activemq-client-5.18.4.jar"
+          "../docs/zkm/lib/artemis-jms-client-2.32.0.jar"
+          "../docs/zkm/lib/artemis-core-client-2.32.0.jar"
+          "../docs/zkm/lib/artemis-server-2.32.0.jar"
+          "../docs/zkm/lib/artemis-commons-2.32.0.jar"
+          "../docs/zkm/lib/artemis-jms-server-2.32.0.jar"
+          "../docs/zkm/lib/spring-kafka-3.1.4.jar"
+          "../docs/zkm/lib/kafka-streams-3.6.2.jar"
+          "../docs/zkm/lib/pulsar-client-3.1.0.jar"
+          "../docs/zkm/lib/pulsar-client-original-3.1.0.jar"
+          "../docs/zkm/lib/pulsar-client-api-3.1.0.jar"
+          "../docs/zkm/lib/pulsar-client-admin-original-3.1.0.jar"
+          "../docs/zkm/lib/pulsar-client-admin-3.1.0.jar"
+          "../docs/zkm/lib/pulsar-client-admin-api-3.1.0.jar"
+          "../docs/zkm/lib/spring-pulsar-1.0.3.jar"
+          "../docs/zkm/lib/spring-pulsar-reactive-1.0.3.jar"
+          "../docs/zkm/lib/pulsar-client-reactive-api-0.5.4.jar"
+          "../docs/zkm/lib/pulsar-client-reactive-adapter-0.5.4.jar"
+          "../docs/zkm/lib/pulsar-reactive-stubs.jar"
+          "../docs/zkm/lib/rsocket-core-1.1.3.jar"
+          "../docs/zkm/lib/rsocket-transport-netty-1.1.3.jar"
+          "../docs/zkm/lib/netty-buffer-4.1.101.Final.jar"
+          "../docs/zkm/lib/reactor-netty-core-1.1.17.jar"
+          "../docs/zkm/lib/reactor-netty-http-1.1.17.jar"
+          "../docs/zkm/lib/reactor-netty5-stub.jar"
+          "../docs/zkm/lib/netty-common-4.1.101.Final.jar"
+          "../docs/zkm/lib/netty-transport-4.1.101.Final.jar"
+          "../docs/zkm/lib/netty-handler-4.1.101.Final.jar"
+          "../docs/zkm/lib/spring-hateoas-2.2.1.jar"
+          "../docs/zkm/lib/rome-1.18.0.jar"
+          "../docs/zkm/lib/spring-plugin-core-3.0.0.jar"
+          "../docs/zkm/lib/quartz-2.3.2.jar"
+          "../docs/zkm/lib/evo-inflector-1.3.jar"
+          "../docs/zkm/lib/freemarker-2.3.32.jar"
+          "../docs/zkm/lib/jmustache-1.16.jar"
+          "../docs/zkm/lib/flyway-core-9.22.3.jar"
+          "../docs/zkm/lib/flyway-database-oracle-9.22.3.jar"
+          "../docs/zkm/lib/liquibase-core-4.24.0.jar"
+          "../docs/zkm/lib/neo4j-java-driver-5.12.0.jar"
+          "../docs/zkm/lib/elasticsearch-java-8.10.4.jar"
+          "../docs/zkm/lib/elasticsearch-rest-client-8.10.4.jar"
+          "../docs/zkm/lib/elasticsearch-rest-client-sniffer-8.10.4.jar"
+          "../docs/zkm/lib/graphql-java-21.4.jar"
+          "../docs/zkm/lib/java-dataloader-3.2.1.jar";
+ignoreMissingReferences kotlin..* and
+                       javax.annotation..* and
+                       org.apache.tomcat..* and
+                       org.apache.naming..* and
+                       jakarta.mail..* and
+                       javax.xml.rpc..* and
+                       org.flywaydb.database..* and
+                       reactor.netty5..* and
+                       io.netty5.handler.codec.http..* and
+                       io.netty5.channel..* and
+                       io.netty5..* and
+                       oracle.jdbc..* and
+                       oracle.ucp..* and
+                       oracle.sql..* and
+                       javafx..* and
+                       org.postgresql.sspi..* and
+                       waffle..* and
+                       org.graalvm.nativeimage..* and
+                       org.hibernate.query..* and
+                       org.hibernate.Hibernate..* and
+                       org.hibernate.Session createCriteria(java.lang.String) and
+                       org.hibernate.Session createCriteria(java.lang.Class) and
+                       jakarta.mail.internet.MimeMessage setFrom(jakarta.mail.internet.InternetAddress) and
+                       com.sun.jna.platform.win32.Sspi$SecBufferDesc <init>(int,byte[]);
+
+print "ZKM: 開始處理 demo-hotel-backend"; 
+
+open openNestedArchives=true
+     "demo-hotel-backend-0.0.1-SNAPSHOT.jar"
+     -"demo-hotel-backend-0.0.1-SNAPSHOT.jar!BOOT-INF/lib/aspectjweaver-1.9.22.jar";
+
+// ----------------------------------------------------------------------------
+// 反射相依：保留 Spring MVC / DI / Config / Jackson / JPA 的類別與成員名稱
+// ----------------------------------------------------------------------------
+// 僅混淆專案自有套件（tw.gov.moda.demohotel），其餘皆排除
+exclude *.*;
+unexclude tw.gov.moda.demohotel.*;
+unexclude tw.gov.moda.demohotel.*.*;
+
+exclude @org.springframework.stereotype.* *.*;
+exclude @org.springframework.context.annotation.* *.*;
+exclude @org.springframework.web.bind.annotation.* *.*;
+exclude *.* @org.springframework.web.bind.annotation.* *(*);
+
+exclude @org.springframework.boot.context.properties.ConfigurationProperties *.*;
+
+exclude @com.fasterxml.jackson.annotation.JsonProperty *.*;
+exclude *.* @com.fasterxml.jackson.annotation.JsonProperty *;
+exclude *.* @com.fasterxml.jackson.annotation.JsonProperty *(*);
+
+exclude @jakarta.persistence.* *.*;
+exclude @javax.persistence.* *.*;
+exclude *.* @jakarta.persistence.* *;
+exclude *.* @jakarta.persistence.* *(*);
+exclude *.* @javax.persistence.* *;
+exclude *.* @javax.persistence.* *(*);
+
+exclude *.* @org.springframework.beans.factory.annotation.Autowired *;
+exclude *.* @org.springframework.beans.factory.annotation.Autowired *(*);
+exclude *.* @org.springframework.beans.factory.annotation.Value *;
+exclude *.* @org.springframework.beans.factory.annotation.Value *(*);
+
+exclude *.* public static main(java.lang.String[]);
+
+// ----------------------------------------------------------------------------
+// 保留常見外部函式庫套件名稱，避免破壞日誌或公用程式載入
+// ----------------------------------------------------------------------------
+exclude org.slf4j.*;
+exclude ch.qos.logback.*;
+exclude org.apache.commons.*;
+
+// ----------------------------------------------------------------------------
+// 混淆設定：保留泛型/內部類資訊，刪除行號與區域變數表，啟用字串加密
+// ----------------------------------------------------------------------------
+obfuscate keepGenericsInfo=true
+          keepInnerClassInfo=true
+          autoReflectionHandling=normal
+          encryptStringLiterals=enhanced
+          obfuscateFlow=light
+          lineNumbers=delete
+          localVariables=delete
+          methodParameters=keepVisible;
+
+// ----------------------------------------------------------------------------
+// 儲存輸出：產生 target/zkm 目錄並保留原始 JAR 名稱
+// ----------------------------------------------------------------------------
+saveAll archiveCompression=asIs
+        "zkm";
