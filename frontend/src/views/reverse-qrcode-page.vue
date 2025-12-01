@@ -339,11 +339,20 @@ textarea {
 }
 
 .encrypted-input {
+  /* 設定輸入框高度 */
   height: 220px;
+  /* 設定輸入框寬度為 100% 填滿容器 */
+  width: 100%;
+  /* 禁止調整大小 */
   resize: none;
+  /* 設定等寬字體，方便檢視加密資料 */
   font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* 設定字體大小 */
   font-size: 14px;
+  /* 設定行高 */
   line-height: 1.5;
+  /* 設定 box-sizing 確保 padding 不會撐破寬度 */
+  box-sizing: border-box;
 }
 
 .revoke-section {
